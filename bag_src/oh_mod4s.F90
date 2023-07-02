@@ -8,15 +8,16 @@
 #include "oh_config.h"
 module ohhelp4s
     use ohhelp3
+    use oh_type
     implicit none
+
     interface
         subroutine oh4s_init(sdid, nspec, maxfrac, npmax, minmargin, maxdensity, &
                              totalp, pbase, maxlocalp, cbufsize, mycomm, nbor, &
                              pcoord, sdoms, scoord, nbound, bcond, bounds, &
                              ftypes, cfields, ctypes, fsizes, zbound, &
                              stats, repiter, verbose)
-            use oh_type
-            implicit none
+            import oh_mycomm
             integer, intent(out)   :: sdid(2)
             integer, intent(in)    :: nspec
             integer, intent(in)    :: maxfrac
@@ -26,7 +27,7 @@ module ohhelp4s
             integer, intent(out)   :: totalp(:, :)
             integer, intent(out)   :: pbase(3)
             integer, intent(out)   :: maxlocalp
-            integer, intent(out)   :: cbfsize
+            integer, intent(out)   :: cbufsize
             type(oh_mycomm), intent(out) :: mycomm
             integer, intent(inout) :: nbor(3, 3, 3)
             integer, intent(in)    :: pcoord(OH_DIMENSION)
@@ -44,12 +45,10 @@ module ohhelp4s
             integer, intent(in)    :: repiter
             integer, intent(in)    :: verbose
         end subroutine
-        subroutine oh4s_particle_buffer(maxlocalp, pbuf) result(ret)
-            use oh_type
-            implicit none
+        subroutine oh4s_particle_buffer(maxlocalp, pbuf)
+            import oh_particle
             integer, intent(in)   :: maxlocalp
             type(oh_particle), intent(inout) :: pbuf(:)
-            integer :: ret
         end subroutine
         subroutine oh4s_per_grid_histogram(pghgram, pgindex)
             implicit none

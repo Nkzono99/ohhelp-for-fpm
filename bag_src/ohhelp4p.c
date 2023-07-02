@@ -15,92 +15,92 @@
 #include "ohhelp4p.h"
 
 static void init4p(int** sdid, const int nspec, const int maxfrac,
-    int** totalp, struct S_particle** pbuf, int** pbase,
-    int maxlocalp, struct S_mycommc* mycommc,
-    struct S_mycommf* mycommf, int** nbor, int* pcoord,
-    int** sdoms, int* scoord, const int nbound, int* bcond,
-    int** bounds, int* ftypes, int* cfields, const int cfid,
-    int* ctypes, int** fsizes,
-    const int stats, const int repiter, const int verbose);
+                   int** totalp, struct S_particle** pbuf, int** pbase,
+                   int maxlocalp, struct S_mycommc* mycommc,
+                   struct S_mycommf* mycommf, int** nbor, int* pcoord,
+                   int** sdoms, int* scoord, const int nbound, int* bcond,
+                   int** bounds, int* ftypes, int* cfields, const int cfid,
+                   int* ctypes, int** fsizes,
+                   const int stats, const int repiter, const int verbose);
 static int  transbound4p(int currmode, int stats, const int level);
 static int  try_primary4p(const int currmode, const int level,
-    const int stats);
+                          const int stats);
 static int  try_stable4p(const int currmode, const int level, const int stats);
 static void rebalance4p(const int currmode, const int level, const int stats);
 static void exchange_particles4p(const int currmode, const int level,
-    int reb, int oldp, const int newp,
-    const int stats);
+                                 int reb, int oldp, const int newp,
+                                 const int stats);
 static void exchange_population(const int currmode, const int nextmode);
 static void add_population(dint* npd, const int xl, const int xu,
-    const int yl, const int yu, const int zl,
-    const int zu, const int src);
+                           const int yl, const int yu, const int zl,
+                           const int zu, const int src);
 static int  mpi_allreduce_wrapper(void* sendbuf, void* recvbuf,
-    const int count, MPI_Datatype datatype,
-    MPI_Op op, const int root, MPI_Comm comm);
+                                  const int count, MPI_Datatype datatype,
+                                  MPI_Op op, const int root, MPI_Comm comm);
 static void reduce_population(int (*mpired)(void*, void*, int,
-    MPI_Datatype, MPI_Op, int,
-    MPI_Comm));
+                                            MPI_Datatype, MPI_Op, int,
+                                            MPI_Comm));
 static struct S_commlist* make_recv_list(const int currmode,
-    const int level, const int reb,
-    const int oldp, const int newp,
-    const int stats);
+                                         const int level, const int reb,
+                                         const int oldp, const int newp,
+                                         const int stats);
 static void sched_recv(const int currmode, const int reb, const int get,
-    const int stay, const int nid, const int tag,
-    struct S_recvsched_context* context);
+                       const int stay, const int nid, const int tag,
+                       struct S_recvsched_context* context);
 static void make_send_sched(const int currmode, const int reb, const int pcode,
-    const int oldp, const int newp,
-    struct S_commlist* hslist, int* nacc, int* nsend);
+                            const int oldp, const int newp,
+                            struct S_commlist* hslist, int* nacc, int* nsend);
 static void make_send_sched_body(const int psor2, const int n, const int sdid,
-    const int self, const int sender,
-    struct S_commlist* rlist, int* maxhs,
-    int* naccs, int* nsendptr);
+                                 const int self, const int sender,
+                                 struct S_commlist* rlist, int* maxhs,
+                                 int* naccs, int* nsendptr);
 static int  gather_hspot_recv(const int currmode, const int reb,
-    const struct S_hotspot* hs);
+                              const struct S_hotspot* hs);
 static void gather_hspot_send(const int hsidx, const int pcode, const int rreq,
-    const int nfrom, const int nto,
-    struct S_commlist** hslist, int* sreqptr);
+                              const int nfrom, const int nto,
+                              struct S_commlist** hslist, int* sreqptr);
 static void gather_hspot_send_body(const int hsidx, const int psor2,
-    const int n, int dst, const int sender,
-    struct S_commlist** hslist,
-    MPI_Request* reqs, int* sreqptr);
+                                   const int n, int dst, const int sender,
+                                   struct S_commlist** hslist,
+                                   MPI_Request* reqs, int* sreqptr);
 static void scatter_hspot_send(const int rreq, int* nacc,
-    struct S_commlist** hslist);
+                               struct S_commlist** hslist);
 static int  scatter_hspot_recv(const int hsidx, const int pcode,
-    const int rreq, const int sreq, const int nfrom,
-    const int nto, int* nacc, int* nsend);
+                               const int rreq, const int sreq, const int nfrom,
+                               const int nto, int* nacc, int* nsend);
 static void scatter_hspot_recv_body(const int hsidx, const int psor2,
-    const int n, int* naccptr, int* nsendptr);
+                                    const int n, int* naccptr, int* nsendptr);
 static void update_descriptors(const int oldp, const int newp);
 static void update_neighbors(const int ps);
 static void set_grid_descriptor(const int idx, const int nid);
 static void adjust_field_descriptor(const int ps);
 static void update_real_neighbors(const int mode, const int dosec,
-    const int oldp, const int newp);
+                                  const int oldp, const int newp);
 static void upd_real_nbr(const int root, const int psp, const int pss,
-    const int nbr, const int dosec, struct S_node* node,
-    struct S_realneighbor rnbrptr[2], int* occur[2]);
+                         const int nbr, const int dosec, struct S_node* node,
+                         struct S_realneighbor rnbrptr[2], int* occur[2]);
 static void exchange_xfer_amount(const int trans, const int psnew);
 static void count_population(const int nextmode, const int psnew,
-    const int stats);
+                             const int stats);
 static void sort_particles(dint*** npg, const int nextmode, const int psnew,
-    const int stats);
+                           const int stats);
 static void move_and_sort_primary(dint*** npg, const int psold,
-    const int stats);
+                                  const int stats);
 static void sort_received_particles(const int nextmode, const int psnew,
-    const int stats);
+                                    const int stats);
 static void move_to_sendbuf_sec4p(const int psold, const int trans,
-    const int oldp, const int* nacc,
-    const int nsend, const int stats);
+                                  const int oldp, const int* nacc,
+                                  const int nsend, const int stats);
 static void move_to_sendbuf_uw4p(const int ps, const int mysd, const int cbase,
-    const int nbase);
+                                 const int nbase);
 static void move_to_sendbuf_dw4p(const int ps, const int mysd, const int ctail,
-    const int ntail);
+                                 const int ntail);
 static void move_and_sort_secondary(const int psold, const int psnew,
-    const int trans, const int oldp,
-    const int* nacc, const int stats);
+                                    const int trans, const int oldp,
+                                    const int* nacc, const int stats);
 static void set_sendbuf_disps4p(const int trans);
 static void xfer_particles(const int trans, const int psnew,
-    struct S_particle* sbuf);
+                           struct S_particle* sbuf);
 
 #define If_Dim(D, ET, EF)  (OH_DIMENSION>D ? (ET) : (EF))
 #define For_Y(LINIT, LCONT, LNEXT) LINIT;
@@ -135,10 +135,12 @@ static void xfer_particles(const int trans, const int psnew,
 }
 #endif
 #endif
+
 #define Decl_For_All_Grid()\
   int fag_x1, fag_y1, fag_z1;\
   int fag_xidx, fag_yidx, fag_zidx, fag_gx, fag_gy, fag_gz;\
   int fag_w, fag_dw;
+
 #define For_All_Grid(PS, X0, Y0, Z0, X1, Y1, Z1)\
   For_Z((fag_zidx=(Z0), fag_x1=GridDesc[PS].x+(X1),\
          fag_y1=GridDesc[PS].y+(Y1), fag_z1=GridDesc[PS].z+(Z1),\
@@ -148,6 +150,7 @@ static void xfer_particles(const int trans, const int psnew,
     For_Y((fag_yidx=(Y0), fag_gy=fag_gz),\
           (fag_yidx<fag_y1), (fag_yidx++,fag_gy+=fag_w))\
       for (fag_xidx=(X0),fag_gx=fag_gy; fag_xidx<fag_x1; fag_xidx++,fag_gx++)
+
 #define For_All_Grid_Abs(PS, X0, Y0, Z0, X1, Y1, Z1)\
   For_Z((fag_zidx=(Z0), fag_x1=(X1), fag_y1=(Y1), fag_z1=(Z1),\
          fag_w=GridDesc[PS].w, fag_dw=GridDesc[PS].dw,\
@@ -156,6 +159,7 @@ static void xfer_particles(const int trans, const int psnew,
     For_Y((fag_yidx=(Y0), fag_gy=fag_gz),\
           (fag_yidx<fag_y1), (fag_yidx++,fag_gy+=fag_w))\
       for (fag_xidx=(X0),fag_gx=fag_gy; fag_xidx<fag_x1; fag_xidx++,fag_gx++)
+
 #define The_Grid()  (fag_gx)
 #define Grid_X()  (fag_xidx)
 #define Grid_Y()  (fag_yidx)
@@ -165,32 +169,32 @@ static void xfer_particles(const int trans, const int psnew,
 #define URN_SEC 1
 #define URN_TRN 2
 
-void
-oh4p_init_(int* sdid, const int* nspec, const int* maxfrac, int* totalp,
-    struct S_particle* pbuf, int* pbase, const int* maxlocalp,
-    struct S_mycommf* mycomm, int* nbor, int* pcoord, int* sdoms,
-    int* scoord, const int* nbound, int* bcond, int* bounds,
-    int* ftypes, int* cfields, int* ctypes, int* fsizes,
-    const int* stats, const int* repiter, const int* verbose) {
+void oh4p_init_(int* sdid, const int* nspec, const int* maxfrac, int* totalp,
+                struct S_particle* pbuf, int* pbase, const int* maxlocalp,
+                struct S_mycommf* mycomm, int* nbor, int* pcoord, int* sdoms,
+                int* scoord, const int* nbound, int* bcond, int* bounds,
+                int* ftypes, int* cfields, int* ctypes, int* fsizes,
+                const int* stats, const int* repiter, const int* verbose) {
     specBase = 1;
     init4p(&sdid, *nspec, *maxfrac, &totalp, &pbuf, &pbase, *maxlocalp, NULL,
-        mycomm, &nbor, pcoord, &sdoms, scoord, *nbound, bcond, &bounds,
-        ftypes, cfields, -1, ctypes, &fsizes,
-        *stats, *repiter, *verbose);
+           mycomm, &nbor, pcoord, &sdoms, scoord, *nbound, bcond, &bounds,
+           ftypes, cfields, -1, ctypes, &fsizes,
+           *stats, *repiter, *verbose);
 }
-void
-oh4p_init(int** sdid, const int nspec, const int maxfrac, int** totalp,
-    struct S_particle** pbuf, int** pbase, const int maxlocalp,
-    void* mycomm, int** nbor, int* pcoord, int** sdoms, int* scoord,
-    const int nbound, int* bcond, int** bounds, int* ftypes,
-    int* cfields, int* ctypes, int** fsizes,
-    const int stats, const int repiter, const int verbose) {
+
+void oh4p_init(int** sdid, const int nspec, const int maxfrac, int** totalp,
+               struct S_particle** pbuf, int** pbase, const int maxlocalp,
+               void* mycomm, int** nbor, int* pcoord, int** sdoms, int* scoord,
+               const int nbound, int* bcond, int** bounds, int* ftypes,
+               int* cfields, int* ctypes, int** fsizes,
+               const int stats, const int repiter, const int verbose) {
     specBase = 0;
     init4p(sdid, nspec, maxfrac, totalp, pbuf, pbase, maxlocalp,
-        (struct S_mycommc*)mycomm, NULL, nbor, pcoord, sdoms, scoord, nbound,
-        bcond, bounds, ftypes, cfields, 0, ctypes, fsizes,
-        stats, repiter, verbose);
+           (struct S_mycommc*)mycomm, NULL, nbor, pcoord, sdoms, scoord, nbound,
+           bcond, bounds, ftypes, cfields, 0, ctypes, fsizes,
+           stats, repiter, verbose);
 }
+
 #define Allocate_NOfPGrid(BODY, NPG, TYPE, SIZE, MSG) {\
   const int ns2 = nOfSpecies<<1;\
   const int gridsize = SIZE;\
@@ -207,15 +211,16 @@ oh4p_init(int** sdid, const int nspec, const int maxfrac, int** totalp,
   }\
   NPG[0] = npgp;  NPG[1] = npgp + nOfSpecies;\
 }
+
 static int nOfLocalPLimitShadow = -1;
-static void
-init4p(int** sdid, const int nspec, const int maxfrac, int** totalp,
-    struct S_particle** pbuf, int** pbase, int maxlocalp,
-    struct S_mycommc* mycommc, struct S_mycommf* mycommf,
-    int** nbor, int* pcoord, int** sdoms, int* scoord,
-    const int nbound, int* bcond, int** bounds, int* ftypes, int* cfields,
-    const int cfid, int* ctypes, int** fsizes,
-    const int stats, const int repiter, const int verbose) {
+
+static void init4p(int** sdid, const int nspec, const int maxfrac, int** totalp,
+                   struct S_particle** pbuf, int** pbase, int maxlocalp,
+                   struct S_mycommc* mycommc, struct S_mycommf* mycommf,
+                   int** nbor, int* pcoord, int** sdoms, int* scoord,
+                   const int nbound, int* bcond, int** bounds, int* ftypes, int* cfields,
+                   const int cfid, int* ctypes, int** fsizes,
+                   const int stats, const int repiter, const int verbose) {
     int nn, me, nnns, nnns2, n;
     int(*ft)[OH_FTYPE_N] = (int(*)[OH_FTYPE_N])ftypes;
     int* cf = cfields;
@@ -234,7 +239,7 @@ init4p(int** sdid, const int nspec, const int maxfrac, int** totalp,
     else
         Particles = *pbuf =
         (struct S_particle*)mem_alloc(sizeof(struct S_particle),
-            maxlocalp << 1, "Particles");
+                                      maxlocalp << 1, "Particles");
     SendBuf = Particles + maxlocalp;
 
     for (nf = 0; ft[nf][OH_FTYPE_ES] > 0; nf++);
@@ -245,7 +250,7 @@ init4p(int** sdid, const int nspec, const int maxfrac, int** totalp,
         (int(*))mem_alloc(sizeof(int), ne + 2, "BoundaryCommFields");
     BoundaryCommTypes = (int(*)[2][OH_CTYPE_N])
         mem_alloc(sizeof(int), (ne + 1) * nbound * 2 * OH_CTYPE_N,
-            "BoundaryCommTypes");
+                  "BoundaryCommTypes");
     memcpy(FieldTypes, ft, sizeof(int) * nf * OH_FTYPE_N);
     for (c = 0; c < ne; c++)  cf[c] = cfields[c] + cfid;
     memcpy(BoundaryCommTypes, ct, sizeof(int) * ne * nbound * 2 * OH_CTYPE_N);
@@ -271,16 +276,16 @@ init4p(int** sdid, const int nspec, const int maxfrac, int** totalp,
         ct[b][OH_UPPER][OH_CTYPE_SIZE] = 0;
 
     init3(sdid, nspec, maxfrac, &nphgram, totalp, NULL, NULL, pbuf, pbase,
-        maxlocalp, mycommc, mycommf, nbor, pcoord, sdoms, scoord, nbound,
-        bcond, bounds, (int*)ft, cf, cfid, (int*)BoundaryCommTypes, fsizes,
-        stats, repiter, verbose, 0);
+          maxlocalp, mycommc, mycommf, nbor, pcoord, sdoms, scoord, nbound,
+          bcond, bounds, (int*)ft, cf, cfid, (int*)BoundaryCommTypes, fsizes,
+          stats, repiter, verbose, 0);
 
     if (nOfLocalPLimitShadow < 0)
         errstop("oh4p_max_local_particles() has to be called before oh4p_init()");
     else if (maxlocalp < nOfLocalPLimitShadow)
         errstop("argument maxlocalp %d given to oh4p_init() is less than that "
-            "calculated by oh4p_max_local_particles() %d",
-            maxlocalp, nOfLocalPLimitShadow);
+                "calculated by oh4p_max_local_particles() %d",
+                maxlocalp, nOfLocalPLimitShadow);
 
     me = myRank;
     PbufIndex = NULL;
@@ -290,38 +295,39 @@ init4p(int** sdid, const int nspec, const int maxfrac, int** totalp,
     Allocate_NOfPGrid(npgtdummy, NOfPGridTotal, dint, size, "NOfPGridTotal");
 
     size = Coord_To_Index(Grid[OH_DIM_X].size - 1,
-        If_Dim(OH_DIM_Y, Grid[OH_DIM_Y].size - 1, 0),
-        If_Dim(OH_DIM_Z, Grid[OH_DIM_Z].size - 1, 0),
-        GridDesc[0].w, GridDesc[0].dw);
+                          If_Dim(OH_DIM_Y, Grid[OH_DIM_Y].size - 1, 0),
+                          If_Dim(OH_DIM_Z, Grid[OH_DIM_Z].size - 1, 0),
+                          GridDesc[0].w, GridDesc[0].dw);
     for (loggrid = 0; size; loggrid++, size >>= 1);
     idmax = (dint)(((nn + OH_NEIGHBORS) << 1) - 1) << loggrid;
     if (idmax > INT_MAX && sizeof(OH_nid_t) == sizeof(int)) {
 #if OH_DIMENSION==1
         errstop("local grid size (%d+%d) times number of nodes %d "
-            "is too large for OH_nid_t=int and thus OH_BIG_SPACE should be "
-            "defined.",
-            GridDesc[0].w - (OH_PGRID_EXT << 2), OH_PGRID_EXT << 2, nn);
+                "is too large for OH_nid_t=int and thus OH_BIG_SPACE should be "
+                "defined.",
+                GridDesc[0].w - (OH_PGRID_EXT << 2), OH_PGRID_EXT << 2, nn);
 #elif OH_DIMENSION==2
         errstop("local grid size (%d+%d)*(%d+%d) times number of nodes %d "
-            "is too large for OH_nid_t=int and thus OH_BIG_SPACE should be "
-            "defined.",
-            GridDesc[0].w - (OH_PGRID_EXT << 2), OH_PGRID_EXT << 2,
-            GridDesc[0].d - (OH_PGRID_EXT << 2), OH_PGRID_EXT << 2, nn);
+                "is too large for OH_nid_t=int and thus OH_BIG_SPACE should be "
+                "defined.",
+                GridDesc[0].w - (OH_PGRID_EXT << 2), OH_PGRID_EXT << 2,
+                GridDesc[0].d - (OH_PGRID_EXT << 2), OH_PGRID_EXT << 2, nn);
 #else
         errstop("local grid size (%d+%d)*(%d+%d)*(%d+%d) times number of nodes %d "
-            "is too large for OH_nid_t=int and thus OH_BIG_SPACE should be "
-            "defined.",
-            GridDesc[0].w - (OH_PGRID_EXT << 2), OH_PGRID_EXT << 2,
-            GridDesc[0].d - (OH_PGRID_EXT << 2), OH_PGRID_EXT << 2,
-            GridDesc[0].h - (OH_PGRID_EXT << 2), OH_PGRID_EXT << 2, nn);
+                "is too large for OH_nid_t=int and thus OH_BIG_SPACE should be "
+                "defined.",
+                GridDesc[0].w - (OH_PGRID_EXT << 2), OH_PGRID_EXT << 2,
+                GridDesc[0].d - (OH_PGRID_EXT << 2), OH_PGRID_EXT << 2,
+                GridDesc[0].h - (OH_PGRID_EXT << 2), OH_PGRID_EXT << 2, nn);
 #endif
     }
+
     logGrid = loggrid;  gridMask = (1 << loggrid) - 1;
     adjust_field_descriptor(0);
 
     HotSpotList = (struct S_hotspot*)mem_alloc(sizeof(struct S_hotspot),
-        2 * nn + 2 * OH_NEIGHBORS + 1,
-        "HotSpotList");
+                                               2 * nn + 2 * OH_NEIGHBORS + 1,
+                                               "HotSpotList");
     hsr = (int*)mem_alloc(sizeof(int), OH_NEIGHBORS * nn * nspec, "HSRecv");
     for (n = 0; n < OH_NEIGHBORS; n++, hsr += nnns)  HSRecv[n] = hsr;
     HSSend = (int*)mem_alloc(sizeof(int), nspec * 3, "HSSend");
@@ -348,14 +354,14 @@ init4p(int** sdid, const int nspec, const int maxfrac, int** totalp,
     if (!SubDomainDesc)
         memcpy(BoundaryCondition, bcond, sizeof(int) * OH_DIMENSION * 2);
 }
-int
-oh4p_max_local_particles_(const dint* npmax, const int* maxfrac,
-    const int* minmargin, const int* hsthresh) {
+
+int oh4p_max_local_particles_(const dint* npmax, const int* maxfrac,
+                              const int* minmargin, const int* hsthresh) {
     return(oh4p_max_local_particles(*npmax, *maxfrac, *minmargin, *hsthresh));
 }
-int
-oh4p_max_local_particles(const dint npmax, const int maxfrac,
-    const int minmargin, const int hsthresh) {
+
+int oh4p_max_local_particles(const dint npmax, const int maxfrac,
+                             const int minmargin, const int hsthresh) {
     const dint npl = (dint)oh2_max_local_particles(npmax, maxfrac, minmargin) +
         ((gridOverflowLimit = hsthresh << 1) << 1);
     const int nplint = npl;
@@ -363,25 +369,25 @@ oh4p_max_local_particles(const dint npmax, const int maxfrac,
     if (npl > INT_MAX) mem_alloc_error("Particles", 0);
     return((nOfLocalPLimitShadow = nplint));
 }
-void
-oh4p_per_grid_histogram_(int* pghgram) {
+
+void oh4p_per_grid_histogram_(int* pghgram) {
     oh4p_per_grid_histogram(&pghgram);
 }
-void
-oh4p_per_grid_histogram(int** pghgram) {
+
+void oh4p_per_grid_histogram(int** pghgram) {
     Allocate_NOfPGrid(*pghgram, NOfPGridOut, int, GridDesc[0].dw * GridDesc[0].h,
-        "NOfPGridOut");
+                      "NOfPGridOut");
 }
-int
-oh4p_transbound_(int* currmode, int* stats) {
+
+int oh4p_transbound_(int* currmode, int* stats) {
     return(transbound4p(*currmode, *stats, 4));
 }
-int
-oh4p_transbound(int currmode, int stats) {
+
+int oh4p_transbound(int currmode, int stats) {
     return(transbound4p(currmode, stats, 4));
 }
-static int
-transbound4p(int currmode, int stats, const int level) {
+
+static int transbound4p(int currmode, int stats, const int level) {
     int ret = MODE_NORM_SEC;
     const int nn = nOfNodes, ns = nOfSpecies, nnns2 = 2 * nn * ns;
     struct S_particle* tmp;
@@ -416,8 +422,8 @@ transbound4p(int currmode, int stats, const int level) {
     currMode = ret < 0 ? -ret : ret;
     return(ret);
 }
-static int
-try_primary4p(const int currmode, const int level, const int stats) {
+
+static int try_primary4p(const int currmode, const int level, const int stats) {
     const int nn = nOfNodes, ns = nOfSpecies, nnns = nn * ns, me = myRank;
     const int oldp = RegionId[1];
     int i, s, nsend, * np;
@@ -430,8 +436,7 @@ try_primary4p(const int currmode, const int level, const int stats) {
         exchange_primary_particles(currmode, stats);
         count_population(0, 0, stats);
         sort_particles(NOfPGrid, 0, 0, 0);
-    }
-    else {
+    } else {
         exchange_population(currmode, 0);
         for (s = 0, nsend = 0, np = NOfPLocal; s < ns; s++, np += nn) {
             for (i = 0; i < nn; i++)  nsend += np[i] + np[i + nnns];
@@ -441,8 +446,7 @@ try_primary4p(const int currmode, const int level, const int stats) {
             move_to_sendbuf_primary(Mode_PS(currmode), stats);
             exchange_primary_particles(currmode, stats);
             sort_particles(npg, 0, 0, stats);
-        }
-        else {
+        } else {
             struct S_particle* sbuf = SendBuf;
             move_and_sort_primary(npg, (oldp >= 0 ? 1 : 0), stats);
             SendBuf += TotalPGlobal[me];
@@ -454,15 +458,15 @@ try_primary4p(const int currmode, const int level, const int stats) {
     primaryParts = *secondaryBase = TotalPGlobal[me];
     return(TRUE);
 }
-static int
-try_stable4p(const int currmode, const int level, const int stats) {
+
+static int try_stable4p(const int currmode, const int level, const int stats) {
     if (!try_stable1(currmode, (Mode_Acc(currmode) ? level : -level), stats))
         return(FALSE);
     exchange_particles4p(currmode, level, 0, RegionId[1], RegionId[1], stats);
     return(TRUE);
 }
-static void
-rebalance4p(const int currmode, const int level, const int stats) {
+
+static void rebalance4p(const int currmode, const int level, const int stats) {
     const int me = myRank, ns = nOfSpecies;
     const int oldp = RegionId[1], amode = Mode_Acc(currmode);
     const int ninj = nOfInjections;
@@ -495,13 +499,14 @@ rebalance4p(const int currmode, const int level, const int stats) {
         update_neighbors(1);
     }
 }
+
 #define Parent_Old(PCODE)       ((PCODE) & 4)
 #define Parent_New(PCODE)       ((PCODE) & 2)
 #define Parent_New_Same(PCODE)  (((PCODE) & 3) == 3)
 #define Parent_New_Diff(PCODE)  (((PCODE) & 3) == 2)
-static void
-exchange_particles4p(const int currmode, const int level, int reb,
-    int oldp, const int newp, const int stats) {
+
+static void exchange_particles4p(const int currmode, const int level, int reb,
+                                 int oldp, const int newp, const int stats) {
     const int trans = !Mode_Acc(currmode) && reb ? 1 : 0;
     int pcode =
         (oldp >= 0 ? 4 : 0) + (newp >= 0 ? 2 : 0) + (oldp == newp ? 1 : 0);
@@ -518,16 +523,14 @@ exchange_particles4p(const int currmode, const int level, int reb,
             set_grid_descriptor(1, newp);
             update_neighbors(1);
             update_real_neighbors(URN_SEC, 0, -1, newp);
-        }
-        else
+        } else
             exchange_particles(CommList + SLHeadTail[1], SecSLHeadTail[0], oldp, 0,
-                currmode, stats);
+                               currmode, stats);
         for (i = 0; i < nnns2; i++)  NOfSend[i] = 0;
         count_population(1, (Parent_New(pcode) ? 1 : 0), 0);
         reduce_population(mpi_allreduce_wrapper);
         reb = 0;  oldp = newp;  pcode = newp >= 0 ? 7 : 0;
-    }
-    else
+    } else
         exchange_population(currmode, 1);
 
     psold = Parent_Old(pcode) ? 1 : 0;
@@ -540,15 +543,14 @@ exchange_particles4p(const int currmode, const int level, int reb,
         move_to_sendbuf_sec4p(psold, trans, oldp, nacc, nsend, stats);
         xfer_particles(trans, psnew, SendBuf);
         sort_particles(NULL, trans + 1, psnew, stats);
-    }
-    else {
+    } else {
         move_and_sort_secondary(psold, psnew, trans, oldp, nacc, stats);
         xfer_particles(trans, psnew, SendBuf + nacc[0] + nacc[1]);
         sort_received_particles(1, psnew, stats);
     }
 }
-static void
-exchange_population(const int currmode, const int nextmode) {
+
+static void exchange_population(const int currmode, const int nextmode) {
     const int ns = nOfSpecies;
     int s;
     dint** npg = NOfPGrid[0];
@@ -560,8 +562,7 @@ exchange_population(const int currmode, const int nextmode) {
 
     if (Mode_PS(currmode)) {
         reduce_population(MPI_Reduce);  npg = NOfPGridTotal[0];
-    }
-    else if (nextmode) {
+    } else if (nextmode) {
         npg = NOfPGridTotal[0];
         for (s = 0; s < ns; s++) {
             dint* npgs = NOfPGrid[0][s], * npgt = npg[s];
@@ -583,25 +584,25 @@ exchange_population(const int currmode, const int nextmode) {
         add_population(npg[s], x - exti, x, 0, y, 0, z, exto);
     }
 }
-static void
-add_population(dint* npd, const int xl, const int xu, const int yl,
-    const int yu, const int zl, const int zu,
-    const int src) {
+
+static void add_population(dint* npd, const int xl, const int xu, const int yl,
+                           const int yu, const int zl, const int zu,
+                           const int src) {
     dint* nps = npd + src;
     Decl_For_All_Grid();
 
     For_All_Grid_Abs(0, xl, yl, zl, xu, yu, zu)
         npd[The_Grid()] += nps[The_Grid()];
 }
-static int
-mpi_allreduce_wrapper(void* sendbuf, void* recvbuf, int count,
-    MPI_Datatype datatype, MPI_Op op, int root,
-    MPI_Comm comm) {
+
+static int mpi_allreduce_wrapper(void* sendbuf, void* recvbuf, int count,
+                                 MPI_Datatype datatype, MPI_Op op, int root,
+                                 MPI_Comm comm) {
     return(MPI_Allreduce(sendbuf, recvbuf, count, datatype, op, comm));
 }
-static void
-reduce_population(int (*mpired)(void*, void*, int, MPI_Datatype, MPI_Op, int,
-    MPI_Comm)) {
+
+static void reduce_population(int (*mpired)(void*, void*, int, MPI_Datatype, MPI_Op, int,
+                                            MPI_Comm)) {
     const int ft = nOfFields - 1;
     const int base = FieldDesc[ft].red.base;
     const int* size = FieldDesc[ft].red.size;
@@ -609,26 +610,25 @@ reduce_population(int (*mpired)(void*, void*, int, MPI_Datatype, MPI_Op, int,
     if (MyComm->black) {
         if (MyComm->prime != MPI_COMM_NULL)
             mpired(NOfPGrid[0][0] + base, NOfPGridTotal[0][0] + base, size[0],
-                MPI_LONG_LONG_INT, MPI_SUM, MyComm->rank, MyComm->prime);
+                   MPI_LONG_LONG_INT, MPI_SUM, MyComm->rank, MyComm->prime);
         if (MyComm->sec != MPI_COMM_NULL)
             mpired(NOfPGrid[1][0] + base, NOfPGridTotal[1][0] + base, size[1],
-                MPI_LONG_LONG_INT, MPI_SUM, MyComm->root, MyComm->sec);
-    }
-    else {
+                   MPI_LONG_LONG_INT, MPI_SUM, MyComm->root, MyComm->sec);
+    } else {
         if (MyComm->sec != MPI_COMM_NULL)
             mpired(NOfPGrid[1][0] + base, NOfPGridTotal[1][0] + base, size[1],
-                MPI_LONG_LONG_INT, MPI_SUM, MyComm->root, MyComm->sec);
+                   MPI_LONG_LONG_INT, MPI_SUM, MyComm->root, MyComm->sec);
         if (MyComm->prime != MPI_COMM_NULL)
             mpired(NOfPGrid[0][0] + base, NOfPGridTotal[0][0] + base, size[0],
-                MPI_LONG_LONG_INT, MPI_SUM, MyComm->rank, MyComm->prime);
+                   MPI_LONG_LONG_INT, MPI_SUM, MyComm->rank, MyComm->prime);
     }
     if (MyComm->prime == MPI_COMM_NULL)
         memcpy(NOfPGridTotal[0][0] + base, NOfPGrid[0][0] + base,
-            size[0] * sizeof(dint));
+               size[0] * sizeof(dint));
 }
-static struct S_commlist*
-make_recv_list(const int currmode, const int level, const int reb,
-    const int oldp, const int newp, const int stats) {
+
+static struct S_commlist* make_recv_list(const int currmode, const int level, const int reb,
+                                         const int oldp, const int newp, const int stats) {
     const int me = myRank, ns = nOfSpecies, nn = nOfNodes, nnns = nn * ns;
     const int nn2 = nn << 1;
     struct S_node* nodes = reb ? NodesNext : Nodes;
@@ -642,23 +642,22 @@ make_recv_list(const int currmode, const int level, const int reb,
     const int* npgsize = FieldDesc[ft].bc.size;
     const int lastg =
         Coord_To_Index(GridDesc[0].x - 1, GridDesc[0].y - 1, GridDesc[0].z - 1,
-            GridDesc[0].w, GridDesc[0].dw);
+                       GridDesc[0].w, GridDesc[0].dw);
     struct S_commlist* lastrl;
     int i;
 
     for (ch = mynode->child; ch; ch = ch->sibling)
         sched_recv(currmode, reb, ch->get.sec, ch->stay.sec, ch->id, nnns,
-            &context);
+                   &context);
     sched_recv(currmode, reb, mynode->get.prime, mynode->stay.prime, me, 0,
-        &context);
+               &context);
     rlidx = rlsize = context.cptr - CommList;  lastrl = context.cptr - 1;
     if (rlsize == 0 || (lastrl->region < lastg && lastrl->count)) {
         struct S_commlist* rl = lastrl + 1;
         rl->rid = rlsize ? lastrl->rid : me;
         rl->tag = 0;  rl->sid = 0;  rl->count = 0;  rl->region = lastg;
         rlidx = ++rlsize;
-    }
-    else
+    } else
         lastrl->region = lastg;
     if (Mode_Acc(currmode)) {
         SecRList = CommList + rlidx;  rlsize = 0;
@@ -677,12 +676,11 @@ make_recv_list(const int currmode, const int level, const int reb,
             RLIndex[i] = rlidx;
             if (dst >= 0)
                 MPI_Sendrecv(CommList, rlsize, T_Commlist, dst, 0,
-                    CommList + rlidx, nn2, T_Commlist, src, 0, MCW, &st);
+                             CommList + rlidx, nn2, T_Commlist, src, 0, MCW, &st);
             else
                 MPI_Recv(CommList + rlidx, nn2, T_Commlist, src, 0, MCW, &st);
             MPI_Get_count(&st, T_Commlist, &rc);  rlidx += rc;
-        }
-        else {
+        } else {
             if (dst >= 0)
                 MPI_Send(CommList, rlsize, T_Commlist, dst, 0, MCW);
             RLIndex[i] = (src < -nn) ? rlidx : RLIndex[FirstNeighbor[i]];
@@ -692,9 +690,9 @@ make_recv_list(const int currmode, const int level, const int reb,
     AltSecRList = SecRList = CommList + rlidx;
     if (Mode_PS(currmode)) {
         oh1_broadcast(RLIndex, SecRLIndex, OH_NEIGHBORS + 1, OH_NEIGHBORS + 1,
-            MPI_INT, MPI_INT);
+                      MPI_INT, MPI_INT);
         oh1_broadcast(CommList, SecRList, rlidx,
-            SecRLIndex[OH_NEIGHBORS], T_Commlist, T_Commlist);
+                      SecRLIndex[OH_NEIGHBORS], T_Commlist, T_Commlist);
         AltSecRList = CommList + (rlidx += SecRLIndex[OH_NEIGHBORS]);
     }
     if (reb) {
@@ -705,13 +703,14 @@ make_recv_list(const int currmode, const int level, const int reb,
         update_real_neighbors(URN_TRN, Mode_PS(currmode), oldp, newp);
         oh1_broadcast(&rlsize, &altrlsize, 1, 1, MPI_INT, MPI_INT);
         oh1_broadcast(CommList, AltSecRList, rlsize, altrlsize,
-            T_Commlist, T_Commlist);
+                      T_Commlist, T_Commlist);
         rlidx += altrlsize;
     }
     oh1_broadcast(NOfPGridTotal[0][0] + npgbase, NOfPGridTotal[1][0] + npgbase,
-        npgsize[0], npgsize[1], MPI_LONG_LONG_INT, MPI_LONG_LONG_INT);
+                  npgsize[0], npgsize[1], MPI_LONG_LONG_INT, MPI_LONG_LONG_INT);
     return(CommList + rlidx);
 }
+
 #define Sched_Recv_Check(INLOOP, G) {\
   if (nptotal>=nplimit) {\
     cptr->region = G;\
@@ -724,6 +723,7 @@ make_recv_list(const int currmode, const int level, const int reb,
       ret = 1;\
   }\
 }
+
 #define Sched_Recv_Return(INLOOP) {\
   if (INLOOP) {\
     context->x = Grid_X();  context->y = Grid_Y();  context->z = Grid_Z();\
@@ -733,6 +733,7 @@ make_recv_list(const int currmode, const int level, const int reb,
   context->cptr = cptr + 1;\
   return;\
 }
+
 #define For_All_Grid_From(X0, Y0, Z0)\
   For_Z((fag_zidx=(Z0),\
          fag_x1=GridDesc[0].x, fag_y1=GridDesc[0].y, fag_z1=GridDesc[0].z,\
@@ -746,9 +747,8 @@ make_recv_list(const int currmode, const int level, const int reb,
           (fag_yidx++, fag_gy+=fag_w, fag_gx=fag_gy, fag_x0=0))\
       for (fag_xidx=fag_x0; fag_xidx<fag_x1; fag_xidx++,fag_gx++)
 
-static void
-sched_recv(const int currmode, const int reb, const int get, const int stay,
-    const int nid, const int tag, struct S_recvsched_context* context) {
+static void sched_recv(const int currmode, const int reb, const int get, const int stay,
+                       const int nid, const int tag, struct S_recvsched_context* context) {
     const int x0 = context->x, y0 = context->y, z0 = context->z, g = context->g;
     const int ovflimit = gridOverflowLimit;
     dint nptotal = context->nptotal;
@@ -788,10 +788,10 @@ sched_recv(const int currmode, const int reb, const int get, const int stay,
     }
     Sched_Recv_Return(1);
 }
-static void
-make_send_sched(const int currmode, const int reb, const int pcode,
-    const int oldp, const int newp, struct S_commlist* hslist,
-    int* nacc, int* nsend) {
+
+static void make_send_sched(const int currmode, const int reb, const int pcode,
+                            const int oldp, const int newp, struct S_commlist* hslist,
+                            int* nacc, int* nsend) {
     const int psold = Parent_Old(pcode) ? 1 : 0;
     const int ns2 = nOfSpecies << 1, nn = nOfNodes;
     int s, ps, n, h, maxhs = -1;
@@ -803,8 +803,7 @@ make_send_sched(const int currmode, const int reb, const int pcode,
     HotSpotTop = HotSpotList;
     if (Mode_Acc(currmode)) {
         nfrom = OH_NBR_SELF;  nto = nfrom + 1;
-    }
-    else {
+    } else {
         nfrom = 0;  nto = OH_NEIGHBORS;
     }
     for (ps = 0; ps <= psold; ps++) {
@@ -819,7 +818,7 @@ make_send_sched(const int currmode, const int reb, const int pcode,
             if (sdid < 0)  sdid = -(sdid + 1);
             if (sdid < nn && (sdid != root || n == OH_NBR_SELF))
                 make_send_sched_body(ps, n, sdid, self, 1, rlist[ps] + rlidx[ps][nrev],
-                    &maxhs, nacc + ps, nsend);
+                                     &maxhs, nacc + ps, nsend);
         }
     }
     if (!Mode_Acc(currmode) && Parent_New_Diff(pcode)) {
@@ -827,7 +826,7 @@ make_send_sched(const int currmode, const int reb, const int pcode,
         hs->comm = NULL;  hs->next = NULL;  hs->g = 0;  hs->lev = INT_MAX;
         HotSpot[2][OH_NBR_SELF].head = HotSpot[2][OH_NBR_SELF].tail = hs;
         make_send_sched_body(2, OH_NBR_SELF, newp, 1, 0, AltSecRList, &maxhs,
-            nacc + 1, nsend);
+                             nacc + 1, nsend);
     }
     for (h = 0; h <= maxhs; h++) {
         int rreq = 0, sreq;
@@ -839,6 +838,7 @@ make_send_sched(const int currmode, const int reb, const int pcode,
         scatter_hspot_recv(h, pcode, rreq, sreq, nfrom, nto, nacc, nsend);
     }
 }
+
 #define Grid_Boundary(N, GS, SD, DIM, PL, PU, OFF) {\
   const int e = OH_PGRID_EXT;\
   const int *b = SubDomains[SD][DIM];\
@@ -847,11 +847,11 @@ make_send_sched(const int currmode, const int reb, const int pcode,
   else if (N==1) { PL = 0;     PU = 0;      OFF = 0; }\
   else           { PL = (GS);  PU = e;      OFF = -(GS); }\
 }
-static void
-make_send_sched_body(const int psor2, const int n, const int sdid,
-    const int self, const int sender,
-    struct S_commlist* rlist, int* maxhs, int* naccptr,
-    int* nsendptr) {
+
+static void make_send_sched_body(const int psor2, const int n, const int sdid,
+                                 const int self, const int sender,
+                                 struct S_commlist* rlist, int* maxhs, int* naccptr,
+                                 int* nsendptr) {
     const int me = myRank, nn = nOfNodes, ns = nOfSpecies;
     const int ps = psor2 == 2 ? 1 : psor2;
     const int nsor0 = ps ? ns : 0;
@@ -865,7 +865,7 @@ make_send_sched_body(const int psor2, const int n, const int sdid,
     Grid_Boundary(ny, GridDesc[psor2].y, sdid, OH_DIM_Y, yl, yu, yoff);
     Grid_Boundary(nz, GridDesc[psor2].z, sdid, OH_DIM_Z, zl, zu, zoff);
     ngoff = Coord_To_Index(xoff, yoff, zoff, GridDesc[psor2].w,
-        GridDesc[psor2].dw);
+                           GridDesc[psor2].dw);
 
     For_All_Grid(psor2, xl, yl, zl, xu, yu, zu) {
         const int g = The_Grid();
@@ -889,8 +889,7 @@ make_send_sched_body(const int psor2, const int n, const int sdid,
             if (self && !involved)
                 for (s = 0; s < ns; s++)  NOfPGridOut[ps][s][g] = 0;
             if (lev > *maxhs)  *maxhs = lev;
-        }
-        else {
+        } else {
             const int rid = rlist->rid;
             int s;
             if (rid == me && self) {
@@ -899,8 +898,7 @@ make_send_sched_body(const int psor2, const int n, const int sdid,
                     nacc += naccinc;  TotalPNext[nsor0 + s] += naccinc;
                     if (sender)  NOfPGrid[ps][s][g] = 0;
                 }
-            }
-            else {
+            } else {
                 if (self)
                     for (s = 0; s < ns; s++)  NOfPGridOut[ps][s][g] = 0;
                 if (sender) {
@@ -916,11 +914,12 @@ make_send_sched_body(const int psor2, const int n, const int sdid,
     }
     *naccptr = nacc; *nsendptr = nsend;
 }
+
 #define Is_Boundary(P, B)  (P<OH_PGRID_EXT ? -1 :\
                            (P>=B-OH_PGRID_EXT ? 1 : 0))
-static int
-gather_hspot_recv(const int currmode, const int reb,
-    const struct S_hotspot* hs) {
+
+static int gather_hspot_recv(const int currmode, const int reb,
+                             const struct S_hotspot* hs) {
     const int me = myRank, ns = nOfSpecies, nn = nOfNodes;
     const int g = hs->g, psold = Mode_PS(currmode) || Mode_Acc(currmode);
     int rreq = 0, nbx, nby, nbz, nx, ny, nz;
@@ -949,7 +948,7 @@ gather_hspot_recv(const int currmode, const int reb,
                 if (nid >= nn)  continue;
                 if (nid != me)
                     MPI_Irecv(HSRecv[nbr] + nid * ns, ns, MPI_INT, nid, nbr, MCW,
-                        reqs + rreq++);
+                              reqs + rreq++);
                 if (nbr == OH_NBR_SELF) {
                     int s, * hsr = HSRecv[OH_NBR_SELF] + me * ns;
                     for (s = 0; s < ns; s++)  hsr[s] = NOfPGrid[0][s][g];
@@ -958,7 +957,7 @@ gather_hspot_recv(const int currmode, const int reb,
                     for (ch = nodes[nid].child; ch; ch = ch->sibling) {
                         const int chid = ch->id;
                         MPI_Irecv(HSRecv[nbr] + chid * ns, ns, MPI_INT, chid, nbr, MCW,
-                            reqs + rreq++);
+                                  reqs + rreq++);
                     }
                 }
             }
@@ -966,10 +965,10 @@ gather_hspot_recv(const int currmode, const int reb,
     }
     return(rreq);
 }
-static void
-gather_hspot_send(const int hsidx, const int pcode, const int rreq,
-    const int nfrom, const int nto, struct S_commlist** hslist,
-    int* sreqptr) {
+
+static void gather_hspot_send(const int hsidx, const int pcode, const int rreq,
+                              const int nfrom, const int nto, struct S_commlist** hslist,
+                              int* sreqptr) {
     const int psold = Parent_Old(pcode) ? 1 : 0;
     MPI_Request* reqs = Requests + rreq;
     int ps, n;
@@ -978,16 +977,16 @@ gather_hspot_send(const int hsidx, const int pcode, const int rreq,
     for (ps = 0; ps <= psold; ps++) {
         for (n = nfrom; n < nto; n++)
             gather_hspot_send_body(hsidx, ps, n, Neighbors[ps][n], 1, hslist, reqs,
-                sreqptr);
+                                   sreqptr);
     }
     if (Parent_New_Diff(pcode))
         gather_hspot_send_body(hsidx, 2, OH_NBR_SELF, RegionId[1], 0, hslist, reqs,
-            sreqptr);
+                               sreqptr);
 }
-static void
-gather_hspot_send_body(const int hsidx, const int psor2, const int n, int dst,
-    const int sender, struct S_commlist** hslist,
-    MPI_Request* reqs, int* sreqptr) {
+
+static void gather_hspot_send_body(const int hsidx, const int psor2, const int n, int dst,
+                                   const int sender, struct S_commlist** hslist,
+                                   MPI_Request* reqs, int* sreqptr) {
     struct S_hotspot* hs = HotSpot[psor2][n].head;
     const int ns = nOfSpecies, g = hs->g, nrec = hs->n * ns;
     const int ps = psor2 == 2 ? 1 : psor2;
@@ -1000,21 +999,21 @@ gather_hspot_send_body(const int hsidx, const int psor2, const int n, int dst,
     if (dst < 0)  dst = -(dst + 1);
     if (hs->self)
         MPI_Irecv(HSRecvFromParent, ns, MPI_INT, dst, OH_NEIGHBORS << 1, MCW,
-            reqs + sreq++);
+                  reqs + sreq++);
     hs->comm = NULL;
     if (sender) {
         for (s = 0, np = 0; s < ns; s++)  np += (HSSend[s] = NOfPGrid[ps][s][g]);
         MPI_Send(HSSend, ns, MPI_INT, dst, nrev, MCW);
         if (np) {
             MPI_Irecv(hsl, nrec, T_Commlist, dst, OH_NEIGHBORS + nrev, MCW,
-                reqs + sreq++);
+                      reqs + sreq++);
             hs->comm = hsl;  hsl += nrec;
         }
     }
     *hslist = hsl;  *sreqptr = sreq;
 }
-static void
-scatter_hspot_send(const int rreq, int* nacc, struct S_commlist** hslist) {
+
+static void scatter_hspot_send(const int rreq, int* nacc, struct S_commlist** hslist) {
     struct S_hotspot* hs = HotSpot[0][OH_NBR_SELF].head;
     const struct S_commlist* rl = hs->comm;
     struct S_commlist* slhead = *hslist, * sl;
@@ -1044,8 +1043,7 @@ scatter_hspot_send(const int rreq, int* nacc, struct S_commlist** hslist) {
                 TotalPNext[s] += nget;
             }
             *nacc += count;
-        }
-        else {
+        } else {
             MPI_Send(nofr, ns, MPI_INT, rid, OH_NEIGHBORS << 1, MCW);
         }
     }
@@ -1065,8 +1063,7 @@ scatter_hspot_send(const int rreq, int* nacc, struct S_commlist** hslist) {
                     nget += ng;  *sl = rl[ri];  sl->tag += tag;
                     if (nput > nget) {
                         nofr[s] = 0;  (sl++)->count = ng;
-                    }
-                    else {
+                    } else {
                         nofr[s] -= ((sl++)->count = nput - ngetsave);  HSReceiver[s] = ri;
                         break;
                     }
@@ -1076,16 +1073,15 @@ scatter_hspot_send(const int rreq, int* nacc, struct S_commlist** hslist) {
         }
         if (r == rreq) {
             hs->comm = sl > slhead ? slhead : NULL;  *hslist = sl;
-        }
-        else if (sl > slhead) {
+        } else if (sl > slhead) {
             MPI_Send(slhead, sl - slhead, T_Commlist, dst, OH_NEIGHBORS + nbr, MCW);
         }
     }
 }
-static int
-scatter_hspot_recv(const int hsidx, const int pcode, const int rreq,
-    const int sreq, const int nfrom, const int nto, int* nacc,
-    int* nsend) {
+
+static int scatter_hspot_recv(const int hsidx, const int pcode, const int rreq,
+                              const int sreq, const int nfrom, const int nto, int* nacc,
+                              int* nsend) {
     const int psold = Parent_Old(pcode) ? 1 : 0;
     int ps, n;
     MPI_Status* st = Statuses + rreq;
@@ -1100,9 +1096,9 @@ scatter_hspot_recv(const int hsidx, const int pcode, const int rreq,
         scatter_hspot_recv_body(hsidx, 2, OH_NBR_SELF, nacc + 1, nsend);
     }
 }
-static void
-scatter_hspot_recv_body(const int hsidx, const int psor2, const int n,
-    int* naccptr, int* nsendptr) {
+
+static void scatter_hspot_recv_body(const int hsidx, const int psor2, const int n,
+                                    int* naccptr, int* nsendptr) {
     const int ns = nOfSpecies, me = myRank;
     const int ps = psor2 == 2 ? 1 : psor2;
     const struct S_hotspot* hs = HotSpot[psor2][n].head;
@@ -1143,8 +1139,8 @@ scatter_hspot_recv_body(const int hsidx, const int psor2, const int n,
     }
     *nsendptr = nsend;
 }
-static void
-update_descriptors(const int oldp, const int newp) {
+
+static void update_descriptors(const int oldp, const int newp) {
     int n;
 
     if (oldp != newp) {
@@ -1155,11 +1151,12 @@ update_descriptors(const int oldp, const int newp) {
         }
     }
 }
+
 #define Neighbor_Grid_Offset(PS, N, SD, D, XYZ)\
   (N==0 ? 0 : (N<0 ? SubDomains[SD][D][OH_LOWER]-SubDomains[SD][D][OH_UPPER] :\
                      GridDesc[ps].XYZ))
-static void
-update_neighbors(const int ps) {
+
+static void update_neighbors(const int ps) {
     int n = 0, nx, ny = 0, nz = 0;
     const int nn = nOfNodes;
 
@@ -1172,15 +1169,15 @@ update_neighbors(const int ps) {
                 else
                     GridOffset[ps][n] =
                     Coord_To_Index(Neighbor_Grid_Offset(ps, nx, nbr, OH_DIM_X, x),
-                        Neighbor_Grid_Offset(ps, ny, nbr, OH_DIM_Y, y),
-                        Neighbor_Grid_Offset(ps, nz, nbr, OH_DIM_Z, z),
-                        GridDesc[0].w, GridDesc[0].dw);
+                                   Neighbor_Grid_Offset(ps, ny, nbr, OH_DIM_Y, y),
+                                   Neighbor_Grid_Offset(ps, nz, nbr, OH_DIM_Z, z),
+                                   GridDesc[0].w, GridDesc[0].dw);
             }
         }
     }
 }
-static void
-set_grid_descriptor(const int idx, const int nid) {
+
+static void set_grid_descriptor(const int idx, const int nid) {
     const int exto2 = OH_PGRID_EXT << 2;
     const int w = GridDesc[idx].w = Grid[OH_DIM_X].size + (exto2);
     const int d = GridDesc[idx].d =
@@ -1192,19 +1189,18 @@ set_grid_descriptor(const int idx, const int nid) {
         GridDesc[idx].x = SubDomains[nid][OH_DIM_X][OH_UPPER] -
             SubDomains[nid][OH_DIM_X][OH_LOWER];
         GridDesc[idx].y = If_Dim(OH_DIM_Y,
-            SubDomains[nid][OH_DIM_Y][OH_UPPER] -
-            SubDomains[nid][OH_DIM_Y][OH_LOWER], 0);
+                                 SubDomains[nid][OH_DIM_Y][OH_UPPER] -
+                                 SubDomains[nid][OH_DIM_Y][OH_LOWER], 0);
         GridDesc[idx].z = If_Dim(OH_DIM_Z,
-            SubDomains[nid][OH_DIM_Z][OH_UPPER] -
-            SubDomains[nid][OH_DIM_Z][OH_LOWER], 0);
-    }
-    else {
+                                 SubDomains[nid][OH_DIM_Z][OH_UPPER] -
+                                 SubDomains[nid][OH_DIM_Z][OH_LOWER], 0);
+    } else {
         GridDesc[idx].x = GridDesc[idx].y = GridDesc[idx].z = -exto2;
         /* to ensure, e.g., x+2*(OH_PGRID_EXT)<=-2*(OH_PGRID_EXT) */
     }
 }
-static void
-adjust_field_descriptor(const int ps) {
+
+static void adjust_field_descriptor(const int ps) {
     const int f = nOfFields - 1, ns = nOfSpecies;
     int d, fs;
 
@@ -1212,9 +1208,9 @@ adjust_field_descriptor(const int ps) {
     fs *= ns - 1;
     FieldDesc[f].bc.size[ps] += fs;    FieldDesc[f].red.size[ps] += fs;
 }
-static void
-update_real_neighbors(const int mode, const int dosec, const int oldp,
-    const int newp) {
+
+static void update_real_neighbors(const int mode, const int dosec, const int oldp,
+                                  const int newp) {
     const int me = myRank, nn = nOfNodes, nn4 = nn << 2;
     const int dosec0 = mode != URN_PRI;
     int i, nbridx, ps, * doccur[2], * soccur[2];
@@ -1252,10 +1248,10 @@ update_real_neighbors(const int mode, const int dosec, const int oldp,
     upd_real_nbr(oldp, 0, 1, 1, 1, Nodes, RealDstNeighbors[1], doccur);
     upd_real_nbr(newp, 1, 1, 2, dosec, NodesNext, RealSrcNeighbors[1], soccur);
 }
-static void
-upd_real_nbr(const int root, const int psp, const int pss,
-    const int nbr, const int dosec, struct S_node* nodes,
-    struct S_realneighbor rnbrptr[2], int* occur[2]) {
+
+static void upd_real_nbr(const int root, const int psp, const int pss,
+                         const int nbr, const int dosec, struct S_node* nodes,
+                         struct S_realneighbor rnbrptr[2], int* occur[2]) {
     const int me = myRank;
     struct S_realneighbor* pnbr = rnbrptr + psp, * snbr = rnbrptr + pss;
     int* poccur = occur[psp], * soccur = occur[pss];
@@ -1291,8 +1287,8 @@ upd_real_nbr(const int root, const int psp, const int pss,
         }
     }
 }
-static void
-exchange_xfer_amount(const int trans, const int psnew) {
+
+static void exchange_xfer_amount(const int trans, const int psnew) {
     const struct S_realneighbor* snbr = RealSrcNeighbors[trans];
     const struct S_realneighbor* dnbr = RealDstNeighbors[trans];
     const int nnns = nOfNodes * nOfSpecies;
@@ -1318,8 +1314,8 @@ exchange_xfer_amount(const int trans, const int psnew) {
     }
     MPI_Waitall(req, Requests, Statuses);
 }
-static void
-count_population(const int nextmode, const int psnew, const int stats) {
+
+static void count_population(const int nextmode, const int psnew, const int stats) {
     int ps, s, t, i, j, tp;
     const int ns = nOfSpecies, exti = OH_PGRID_EXT;
     Decl_For_All_Grid();
@@ -1343,9 +1339,9 @@ count_population(const int nextmode, const int psnew, const int stats) {
     }
     totalParts = tp;  nOfInjections = 0;
 }
-static void
-sort_particles(dint*** npg, const int nextmode, const int psnew,
-    const int stats) {
+
+static void sort_particles(dint*** npg, const int nextmode, const int psnew,
+                           const int stats) {
     const int ns = nOfSpecies;
     struct S_particle* p = Particles;
     int ps, s, t, i, npt;
@@ -1364,8 +1360,7 @@ sort_particles(dint*** npg, const int nextmode, const int psnew,
                     const int np = npgo[The_Grid()];
                     npgt[The_Grid()] = npt;  npt += np;
                 }
-            }
-            else {
+            } else {
                 dint* npgs = npg[ps][s];
                 For_All_Grid(0, 0, 0, 0, 0, 0, 0) {
                     const int np = npgo[The_Grid()] = npgs[The_Grid()];
@@ -1377,8 +1372,8 @@ sort_particles(dint*** npg, const int nextmode, const int psnew,
         }
     }
 }
-static void
-move_and_sort_primary(dint*** npg, const int psold, const int stats) {
+
+static void move_and_sort_primary(dint*** npg, const int psold, const int stats) {
     const int nn = nOfNodes, ns = nOfSpecies, nnns = nn * ns, me = myRank;
     const int ninj = nOfInjections, sbase = specBase;
     struct S_particle* rbb, * p, * sbuf;
@@ -1431,8 +1426,8 @@ move_and_sort_primary(dint*** npg, const int psold, const int stats) {
     }
     set_sendbuf_disps(psold, -1);
 }
-static void
-sort_received_particles(const int nextmode, const int psnew, const int stats) {
+
+static void sort_received_particles(const int nextmode, const int psnew, const int stats) {
     const int ns = nOfSpecies;
     int ps, s;
     struct S_particle* p = Particles, ** rbb = RecvBufBases + 1;
@@ -1447,6 +1442,7 @@ sort_received_particles(const int nextmode, const int psnew, const int stats) {
         }
     }
 }
+
 #define Local_Grid_Position(G, NID, PS)  ((G) + GridOffset[PS][NID>>loggrid])
 
 #define Move_Or_Do(P, PS, MYSD, MOVEIF, ACT) {\
@@ -1472,9 +1468,9 @@ sort_received_particles(const int nextmode, const int psnew, const int stats) {
     }\
   }\
 }
-static void
-move_to_sendbuf_sec4p(const int psold, const int trans, const int oldp,
-    const int* nacc, const int nsend, const int stats) {
+
+static void move_to_sendbuf_sec4p(const int psold, const int trans, const int oldp,
+                                  const int* nacc, const int nsend, const int stats) {
     const int me = myRank, ns = nOfSpecies, sbase = specBase;
     const int ninj = nOfInjections, nplim = nOfLocalPLimit;
     int ninjp = 0, ninjs = nplim, i;
@@ -1493,16 +1489,14 @@ move_to_sendbuf_sec4p(const int psold, const int trans, const int oldp,
         if (ps) {
             Primarize_Id_Only(p);
             Move_Or_Do(p, ps, oldp, 1, (sb[--ninjs] = *p));
-        }
-        else
+        } else
             Move_Or_Do(p, ps, me, 1, (sb[nsend + ninjp++] = *p));
     }
     move_to_sendbuf_uw4p(0, me, 0, 0);
     if (psold) {
         move_to_sendbuf_uw4p(1, oldp, primaryParts, nacc[0]);
         move_to_sendbuf_dw4p(1, oldp, totalParts, nacc[0] + nacc[1]);
-    }
-    else {
+    } else {
         struct S_particle* rbb = Particles + nacc[0];
         int s;
         for (s = 0; s < ns; s++) {
@@ -1518,9 +1512,9 @@ move_to_sendbuf_sec4p(const int psold, const int trans, const int oldp,
 
     primaryParts = *secondaryBase = nacc[0];
 }
-static void
-move_to_sendbuf_uw4p(const int ps, const int mysd, const int cbase,
-    const int nbase) {
+
+static void move_to_sendbuf_uw4p(const int ps, const int mysd, const int cbase,
+                                 const int nbase) {
     const int ns = nOfSpecies;
     const int nsor0 = ps ? ns : 0;
     const int* ctp = TotalP + nsor0, * ntp = TotalPNext + nsor0;
@@ -1535,11 +1529,9 @@ move_to_sendbuf_uw4p(const int ps, const int mysd, const int cbase,
             for (p = Particles + c; c < cn; c++, p++)
                 Move_Or_Do(p, ps, mysd, 1, (Particles[d++] = *p));
             rbb[s] = Particles + d;
-        }
-        else if (dn > cn) {
+        } else if (dn > cn) {
             rbb[s] = Particles + d;
-        }
-        else {
+        } else {
             const int cb = c;
             int cm, dm;
             for (p = Particles + c; c < d; c++, p++)  Move_Or_Do(p, ps, mysd, -1, (d++));
@@ -1552,9 +1544,9 @@ move_to_sendbuf_uw4p(const int ps, const int mysd, const int cbase,
         }
     }
 }
-static void
-move_to_sendbuf_dw4p(const int ps, const int mysd, const int ctail,
-    const int ntail) {
+
+static void move_to_sendbuf_dw4p(const int ps, const int mysd, const int ctail,
+                                 const int ntail) {
     const int ns = nOfSpecies;
     const int nsor0 = ps ? ns : 0;
     const int* ctp = TotalP + nsor0, * ntp = TotalPNext + nsor0;
@@ -1571,9 +1563,9 @@ move_to_sendbuf_dw4p(const int ps, const int mysd, const int ctail,
             Move_Or_Do(p, ps, mysd, 1, (Particles[d--] = *p));
     }
 }
-static void
-move_and_sort_secondary(const int psold, const int psnew, const int trans,
-    const int oldp, const int* nacc, const int stats) {
+
+static void move_and_sort_secondary(const int psold, const int psnew, const int trans,
+                                    const int oldp, const int* nacc, const int stats) {
     const int me = myRank, ns = nOfSpecies, nn = nOfNodes, sbase = specBase;
     const int mysubdom[2] = { me, oldp }, ninj = nOfInjections;
     struct S_particle* p, * rbb, * sb = SendBuf + nacc[0] + nacc[1];
@@ -1623,8 +1615,8 @@ move_and_sort_secondary(const int psold, const int psnew, const int trans,
     }
     primaryParts = *secondaryBase = nacc[0];
 }
-static void
-set_sendbuf_disps4p(const int trans) {
+
+static void set_sendbuf_disps4p(const int trans) {
     const int nn = nOfNodes, ns = nOfSpecies;
     int ps, s, i, np, * sbd;
 
@@ -1640,8 +1632,8 @@ set_sendbuf_disps4p(const int trans) {
         }
     }
 }
-static void
-xfer_particles(const int trans, const int psnew, struct S_particle* sbuf) {
+
+static void xfer_particles(const int trans, const int psnew, struct S_particle* sbuf) {
     const int nn = nOfNodes, ns = nOfSpecies;
     int ps, s, t, i, req, sdisp, * nofr, * nofs;
 
@@ -1671,7 +1663,7 @@ xfer_particles(const int trans, const int psnew, struct S_particle* sbuf) {
                 nofs[nid] = 0;
                 if (nsend) {
                     MPI_Isend(sbuf + sdisp, nsend, T_Particle, nid, t, MCW,
-                        Requests + req++);
+                              Requests + req++);
                 }
                 sdisp = sdnxt;
             }
@@ -1679,6 +1671,7 @@ xfer_particles(const int trans, const int psnew, struct S_particle* sbuf) {
     }
     MPI_Waitall(req, Requests, Statuses);
 }
+
 #ifndef OH_NO_CHECK
 #define Check_Particle_Location(P, PS, S, NS, INJ) {\
   const int t = (PS) ? (S)+(NS) : (S);\
@@ -1696,6 +1689,7 @@ xfer_particles(const int trans, const int psnew, struct S_particle* sbuf) {
 #else
 #define Check_Particle_Location(P, PS, S, NS, INJ)
 #endif
+
 #define Map_Particle_To_Neighbor(P, XYZ, DIM, MYSD, K, INC, UB, G, IDX) {\
   const double xyz = XYZ;\
   const double gsize = Grid[DIM].gsize;\
@@ -1723,16 +1717,15 @@ xfer_particles(const int trans, const int psnew, struct S_particle* sbuf) {
     if (G>=OH_PGRID_EXT)  K = -OH_NEIGHBORS;\
   }\
 }
+
 #define Adjust_Neighbor_Grid(G, N, DIM)\
   if (G<0) G += SubDomains[N][DIM][OH_UPPER]-SubDomains[N][DIM][OH_LOWER];
-int
-oh4p_map_particle_to_neighbor_(struct S_particle* part, const int* ps,
-    const int* s) {
+
+int oh4p_map_particle_to_neighbor_(struct S_particle* part, const int* ps, const int* s) {
     return(oh4p_map_particle_to_neighbor(part, *ps, *s - 1));
 }
-int
-oh4p_map_particle_to_neighbor(struct S_particle* part, const int ps,
-    const int s) {
+
+int oh4p_map_particle_to_neighbor(struct S_particle* part, const int ps, const int s) {
     const int ns = nOfSpecies, inj = part >= Particles + totalParts;
     int x, y, z, w, d, dw, mysd;
     const int psnn = ps ? (s + nOfSpecies) * nOfNodes : s * nOfNodes;
@@ -1746,10 +1739,10 @@ oh4p_map_particle_to_neighbor(struct S_particle* part, const int ps,
     w = GridDesc[ps].w;  d = GridDesc[ps].d;  dw = GridDesc[ps].dw;
     mysd = RegionId[ps];
     Do_Z(Map_Particle_To_Neighbor(part, part->z, OH_DIM_Z, mysd, k, 9, z, gz,
-        idx));
+                                  idx));
     Do_Z(idx *= d);
     Do_Y(Map_Particle_To_Neighbor(part, part->y, OH_DIM_Y, mysd, k, 3, y, gy,
-        idx));
+                                  idx));
     Do_Y(idx *= w);
     Map_Particle_To_Neighbor(part, part->x, OH_DIM_X, mysd, k, 1, x, gx, idx);
 
@@ -1760,14 +1753,12 @@ oh4p_map_particle_to_neighbor(struct S_particle* part, const int ps,
         if (inj) {
             if (ps) {
                 InjectedParticles[ns + s]++;  Secondarize_Id(part);
-            }
-            else {
+            } else {
                 InjectedParticles[s]++;
             }
         }
         return(mysd);
-    }
-    else if (k < 0)
+    } else if (k < 0)
         return(oh4p_map_particle_to_subdomain(part, ps, s));
     sd = AbsNeighbors[ps][k];
     if (sd >= nOfNodes) {
@@ -1783,14 +1774,14 @@ oh4p_map_particle_to_neighbor(struct S_particle* part, const int ps,
         NOfPGrid[ps][s][idx]++;
         part->nid = Combine_Subdom_Pos(OH_NBR_SELF, idx);
         if (inj)  InjectedParticles[ps ? ns + s : s]++;
-    }
-    else {
+    } else {
         NOfPGrid[ps][s][idx]++;
         part->nid = Combine_Subdom_Pos(k, Coord_To_Index(gx, gy, gz, w, dw));
     }
     if (inj && ps)  Secondarize_Id(part);
     return(sd);
 }
+
 #define Map_To_Grid(P, PXYZ, XYZ, DIM, GG, LG) {\
   const double gsize = Grid[DIM].gsize;\
   const double lb = Grid[DIM].fcoord[OH_LOWER];\
@@ -1814,6 +1805,7 @@ oh4p_map_particle_to_neighbor(struct S_particle* part, const int ps,
   else if (gf+gsize<=XYZ) GG++;\
   LG += GG;\
 }
+
 #define Map_Particle_To_Subdomain(XYZ, DIM, SDOM) {\
   double thresh = Grid[DIM].light.thresh;\
   if (XYZ<thresh)\
@@ -1821,6 +1813,7 @@ oh4p_map_particle_to_neighbor(struct S_particle* part, const int ps,
   else\
     SDOM = (XYZ - thresh)/ (Grid[DIM].light.size + 1) + Grid[DIM].light.n;\
 }
+
 #define Local_Coordinate(N, MYSD, GG, LG, DIM, K, INC, AA) {\
   GG -= SubDomains[N][DIM][OH_LOWER];\
   if (N==MYSD)  LG = GG;\
@@ -1835,14 +1828,14 @@ oh4p_map_particle_to_neighbor(struct S_particle* part, const int ps,
     }\
   }\
 }
-int
-oh4p_map_particle_to_subdomain_(struct S_particle* part, const int* ps,
-    const int* s) {
+
+int oh4p_map_particle_to_subdomain_(struct S_particle* part, const int* ps,
+                                    const int* s) {
     return(oh4p_map_particle_to_subdomain(part, *ps, *s - 1));
 }
-int
-oh4p_map_particle_to_subdomain(struct S_particle* part, const int ps,
-    const int s) {
+
+int oh4p_map_particle_to_subdomain(struct S_particle* part, const int ps,
+                                   const int s) {
     const int ns = nOfSpecies, inj = part >= Particles + totalParts;
     const int nx = Grid[OH_DIM_X].n;
     const int nxy = If_Dim(OH_DIM_Y, nx * Grid[OH_DIM_Y].n, 0);
@@ -1863,10 +1856,9 @@ oh4p_map_particle_to_subdomain(struct S_particle* part, const int ps,
     Do_Z(Map_To_Grid(part, part->z, z, OH_DIM_Z, gz, lz));
     if (SubDomainDesc) {
         sd = map_irregular_subdomain(x, If_Dim(OH_DIM_Y, y, 0),
-            If_Dim(OH_DIM_Z, z, 0));
+                                     If_Dim(OH_DIM_Z, z, 0));
         if (sd < 0) { part->nid = -1;  return(-1); }
-    }
-    else {
+    } else {
         Map_Particle_To_Subdomain(gx, OH_DIM_X, px);
         Do_Y(Map_Particle_To_Subdomain(gy, OH_DIM_Y, py));
         Do_Z(Map_Particle_To_Subdomain(gz, OH_DIM_Z, pz));
@@ -1879,9 +1871,8 @@ oh4p_map_particle_to_subdomain(struct S_particle* part, const int ps,
     if (aacc) {
         currMode = Mode_Set_Any(currMode);
         part->nid = Combine_Subdom_Pos(sd + OH_NEIGHBORS,
-            Coord_To_Index(gx, gy, gz, w, dw));
-    }
-    else {
+                                       Coord_To_Index(gx, gy, gz, w, dw));
+    } else {
         NOfPGrid[ps][s][Coord_To_Index(lx, ly, lz, w, dw)]++;
         part->nid = Combine_Subdom_Pos(k, Coord_To_Index(gx, gy, gz, w, dw));
     }
@@ -1891,12 +1882,12 @@ oh4p_map_particle_to_subdomain(struct S_particle* part, const int ps,
     }
     return(sd);
 }
-int
-oh4p_inject_particle_(const struct S_particle* part, const int* ps) {
+
+int oh4p_inject_particle_(const struct S_particle* part, const int* ps) {
     return(oh4p_inject_particle(part, *ps));
 }
-int
-oh4p_inject_particle(const struct S_particle* part, const int ps) {
+
+int oh4p_inject_particle(const struct S_particle* part, const int ps) {
     const int ns = nOfSpecies;
     int inj = totalParts + nOfInjections++;
     struct S_particle* p = Particles + inj;
@@ -1906,7 +1897,7 @@ oh4p_inject_particle(const struct S_particle* part, const int ps) {
 #ifndef OH_HAS_SPEC
     if (ns != 1)
         local_errstop("particles cannot be injected when S_particle does not "
-            "have 'spec' element and you have two or more species");
+                      "have 'spec' element and you have two or more species");
 #endif
     if (inj >= nOfLocalPLimit)
         local_errstop("injection causes local particle buffer overflow");
@@ -1915,14 +1906,12 @@ oh4p_inject_particle(const struct S_particle* part, const int ps) {
     if (sd < 0)  nOfInjections--;
     return(sd);
 }
-void
-oh4p_remove_mapped_particle_(struct S_particle* part, const int* ps,
-    const int* s) {
+
+void oh4p_remove_mapped_particle_(struct S_particle* part, const int* ps, const int* s) {
     oh4p_remove_mapped_particle(part, *ps, *s - 1);
 }
-void
-oh4p_remove_mapped_particle(struct S_particle* part, const int ps,
-    const int s) {
+
+void oh4p_remove_mapped_particle(struct S_particle* part, const int ps, const int s) {
     const int nn = nOfNodes, ns = nOfSpecies, inj = part >= Particles + totalParts;
     OH_nid_t nid = part->nid;
     int sd, g, psreal = ps, mysd, t;
@@ -1944,25 +1933,21 @@ oh4p_remove_mapped_particle(struct S_particle* part, const int ps,
     if (sd != mysd)  g = Local_Grid_Position(g, nid, psreal);
     NOfPGrid[psreal][s][g]--;
 }
-int
-oh4p_remap_particle_to_neighbor_(struct S_particle* part, const int* ps,
-    const int* s) {
+
+int oh4p_remap_particle_to_neighbor_(struct S_particle* part, const int* ps, const int* s) {
     return(oh4p_remap_particle_to_neighbor(part, *ps, *s - 1));
 }
-int
-oh4p_remap_particle_to_neighbor(struct S_particle* part, const int ps,
-    const int s) {
+
+int oh4p_remap_particle_to_neighbor(struct S_particle* part, const int ps, const int s) {
     oh4p_remove_mapped_particle(part, ps, s);
     return(oh4p_map_particle_to_neighbor(part, ps, s));
 }
-int
-oh4p_remap_particle_to_subdomain_(struct S_particle* part, const int* ps,
-    const int* s) {
+
+int oh4p_remap_particle_to_subdomain_(struct S_particle* part, const int* ps, const int* s) {
     return(oh4p_remap_particle_to_subdomain(part, *ps, *s - 1));
 }
-int
-oh4p_remap_particle_to_subdomain(struct S_particle* part, const int ps,
-    const int s) {
+
+int oh4p_remap_particle_to_subdomain(struct S_particle* part, const int ps, const int s) {
     oh4p_remove_mapped_particle(part, ps, s);
     return(oh4p_map_particle_to_subdomain(part, ps, s));
 }
