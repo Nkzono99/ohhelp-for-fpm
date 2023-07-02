@@ -20,7 +20,7 @@
 #define STATS_TIMINGS     (STATS_TB_COMM + 1)
 
 #ifdef OH_DEFINE_STATS
-static char *StatsTimeStrings[2*STATS_TIMINGS] = {
+static char* StatsTimeStrings[2 * STATS_TIMINGS] = {
   "transbound",         "",
   "try_stable",         "",
   "rebalance",          "",
@@ -30,5 +30,5 @@ static char *StatsTimeStrings[2*STATS_TIMINGS] = {
   "part sort[pri]",     "part sort[sec]",
 #endif
   "part comm[pri]",     "part comm[sec]",
-};
+    };
 #endif

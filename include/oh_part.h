@@ -21,9 +21,9 @@ typedef int OH_nid_t;
 // };
 
 struct S_particle {
-  double x, y, z, vx, vy, vz;
-  int pid, preside;
-  OH_nid_t nid;
-  int spec;
-};
+    double x, y, z, vx, vy, vz;
+    int pid, preside;
+    OH_nid_t nid;
+    int spec;
+    };
 #define OH_HAS_SPEC
