@@ -54,9 +54,9 @@ void oh2_inject_particle(struct S_particle* part);
 void oh2_remap_injected_particle(struct S_particle* part);
 void oh2_remove_injected_particle(struct S_particle* part);
 void oh2_init(int** sdid, int nspec, int maxfrac, int** nphgram,
-    int** totalp, struct S_particle** pbuf, int** pbase,
-    int maxlocalp, void* mycomm, int** nbor,
-    int* pcoord, int stats, int repiter, int verbose);
+              int** totalp, struct S_particle** pbuf, int** pbase,
+              int maxlocalp, void* mycomm, int** nbor,
+              int* pcoord, int stats, int repiter, int verbose);
 int  oh2_transbound(int currmode, int stats);
 
 void oh2_set_total_particles_();
@@ -65,20 +65,20 @@ void oh2_inject_particle_(struct S_particle* part);
 void oh2_remap_injected_particle_(struct S_particle* part);
 void oh2_remove_injected_particle_(struct S_particle* part);
 void oh2_init_(int* sdid, int* nspec, int* maxfrac, int* nphgram,
-    int* totalp, struct S_particle* pbuf, int* pbase,
-    int* maxlocalp, struct S_mycommf* mycomm, int* nbor,
-    int* pcoord, int* stats, int* repiter, int* verbose);
+               int* totalp, struct S_particle* pbuf, int* pbase,
+               int* maxlocalp, struct S_mycommf* mycomm, int* nbor,
+               int* pcoord, int* stats, int* repiter, int* verbose);
 int  oh2_transbound_(int* currmode, int* stats);
 
 /* Prototypes for the functions called from higher-level library code */
 void init2(int** sdid, int nspec, int maxfrac, int** nphgram,
-    int** totalp, struct S_particle** pbuf, int** pbase, int maxlocalp,
-    struct S_mycommc* mycommc, struct S_mycommf* mycommf,
-    int** nbor, int* pcoord, int stats, int repiter, int verbose);
+           int** totalp, struct S_particle** pbuf, int** pbase, int maxlocalp,
+           struct S_mycommc* mycommc, struct S_mycommf* mycommf,
+           int** nbor, int* pcoord, int stats, int repiter, int verbose);
 int  transbound2(int currmode, int stats, int level);
 void exchange_primary_particles(int currmode, int stats);
 void move_to_sendbuf_primary(int secondary, int stats);
 void set_sendbuf_disps(int secondary, int parent);
 void exchange_particles(struct S_commlist* secrlist, int secrlsize,
-    int oldparent, int neighboring, int currmode,
-    int stats);
+                        int oldparent, int neighboring, int currmode,
+                        int stats);

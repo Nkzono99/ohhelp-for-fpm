@@ -21,14 +21,14 @@
 
 #ifdef OH_DEFINE_STATS
 static char* StatsTimeStrings[2 * STATS_TIMINGS] = {
-  "transbound",         "",
-  "try_stable",         "",
-  "rebalance",          "",
-  "reb comm create",    "",
-  "part move[pri]",     "part move[sec]",
+    "transbound",         "",
+    "try_stable",         "",
+    "rebalance",          "",
+    "reb comm create",    "",
+    "part move[pri]",     "part move[sec]",
 #ifdef  OH_LIB_LEVEL_4PS
-  "part sort[pri]",     "part sort[sec]",
+    "part sort[pri]",     "part sort[sec]",
 #endif
-  "part comm[pri]",     "part comm[sec]",
-    };
+    "part comm[pri]",     "part comm[sec]",
+};
 #endif

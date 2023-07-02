@@ -21,9 +21,11 @@
 #ifdef  OH_LIB_LEVEL_4P
 #define OH_LIB_LEVEL_4PS
 #endif
+
 #ifdef  OH_LIB_LEVEL_4S
 #define OH_LIB_LEVEL_4PS
 #endif
+
 #ifdef  OH_LIB_LEVEL_4PS
 #define OH_LIB_LEVEL 4
 /* If you want to use level-4p/4s functions with a large simulation space,

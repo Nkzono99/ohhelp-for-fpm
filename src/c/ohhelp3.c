@@ -14,87 +14,85 @@
 #include "ohhelp3.h"
 
 static void init_subdomain_actively(int(*sd)[OH_DIMENSION][2],
-    int sc[OH_DIMENSION][2],
-    int* pcoord, int bc[OH_DIMENSION][2],
-    int(*bd)[OH_DIMENSION][2], int nb,
-    int bbase);
+                                    int sc[OH_DIMENSION][2],
+                                    int* pcoord, int bc[OH_DIMENSION][2],
+                                    int(*bd)[OH_DIMENSION][2], int nb,
+                                    int bbase);
 static void init_subdomain_passively(int(*sd)[OH_DIMENSION][2],
-    int(*bd)[OH_DIMENSION][2], int nb,
-    int bbase);
+                                     int(*bd)[OH_DIMENSION][2], int nb,
+                                     int bbase);
 static int  comp_xyz(const void* aa, const void* bb);
 static void init_fields(int(*ft)[OH_FTYPE_N], int* cf, int cfid,
-    int(*ct)[2][OH_CTYPE_N], int nb,
-    int sd[OH_DIMENSION][2], int** fsizes);
+                        int(*ct)[2][OH_CTYPE_N], int nb,
+                        int sd[OH_DIMENSION][2], int** fsizes);
 static void set_border_exchange(int e, int ps, MPI_Datatype type);
 static void set_border_comm(int esize, int f, int* xyz, int* wdh,
-    int(*exti)[2], int(*exto)[2],
-    int(*off)[2], int(*size)[2],
-    int lu, int sr, MPI_Datatype basetype,
-    struct S_borderexc bx[OH_DIMENSION][2]);
+                            int(*exti)[2], int(*exto)[2],
+                            int(*off)[2], int(*size)[2],
+                            int lu, int sr, MPI_Datatype basetype,
+                            struct S_borderexc bx[OH_DIMENSION][2]);
 static int  transbound3(int currmode, int stats, int level);
-static int  map_irregular(double p0, double p1, double p2, int dim, int from,
-    int n);
+static int  map_irregular(double p0, double p1, double p2, int dim, int from, int n);
 static int  map_irregular_range(double p, int dim, int from, int to);
 
-void
-oh3_init_(int* sdid, int* nspec, int* maxfrac, int* nphgram,
-    int* totalp, struct S_particle* pbuf, int* pbase, int* maxlocalp,
-    struct S_mycommf* mycomm, int* nbor, int* pcoord,
-    int* sdoms, int* scoord, int* nbound, int* bcond, int* bounds,
-    int* ftypes, int* cfields, int* ctypes, int* fsizes,
-    int* stats, int* repiter, int* verbose) {
+void oh3_init_(int* sdid, int* nspec, int* maxfrac, int* nphgram,
+               int* totalp, struct S_particle* pbuf, int* pbase, int* maxlocalp,
+               struct S_mycommf* mycomm, int* nbor, int* pcoord,
+               int* sdoms, int* scoord, int* nbound, int* bcond, int* bounds,
+               int* ftypes, int* cfields, int* ctypes, int* fsizes,
+               int* stats, int* repiter, int* verbose) {
     specBase = 1;
     init3(&sdid, *nspec, *maxfrac, &nphgram, &totalp, NULL, NULL, &pbuf, &pbase,
-        *maxlocalp, NULL, mycomm, &nbor, pcoord, &sdoms, scoord, *nbound,
-        bcond, &bounds, ftypes, cfields, -1, ctypes, &fsizes,
-        *stats, *repiter, *verbose, 0);
+          *maxlocalp, NULL, mycomm, &nbor, pcoord, &sdoms, scoord, *nbound,
+          bcond, &bounds, ftypes, cfields, -1, ctypes, &fsizes,
+          *stats, *repiter, *verbose, 0);
 }
-void
-oh3_init(int** sdid, int nspec, int maxfrac, int** nphgram,
-    int** totalp, struct S_particle** pbuf, int** pbase, int maxlocalp,
-    void* mycomm, int** nbor, int* pcoord,
-    int** sdoms, int* scoord, int nbound, int* bcond, int** bounds,
-    int* ftypes, int* cfields, int* ctypes, int** fsizes,
-    int stats, int repiter, int verbose) {
+
+void oh3_init(int** sdid, int nspec, int maxfrac, int** nphgram,
+              int** totalp, struct S_particle** pbuf, int** pbase, int maxlocalp,
+              void* mycomm, int** nbor, int* pcoord,
+              int** sdoms, int* scoord, int nbound, int* bcond, int** bounds,
+              int* ftypes, int* cfields, int* ctypes, int** fsizes,
+              int stats, int repiter, int verbose) {
     specBase = 0;
     init3(sdid, nspec, maxfrac, nphgram, totalp, NULL, NULL, pbuf, pbase,
-        maxlocalp, (struct S_mycommc*)mycomm, NULL, nbor, pcoord, sdoms,
-        scoord, nbound, bcond, bounds, ftypes, cfields, 0, ctypes, fsizes,
-        stats, repiter, verbose, 0);
+          maxlocalp, (struct S_mycommc*)mycomm, NULL, nbor, pcoord, sdoms,
+          scoord, nbound, bcond, bounds, ftypes, cfields, 0, ctypes, fsizes,
+          stats, repiter, verbose, 0);
 }
-void
-oh13_init_(int* sdid, int* nspec, int* maxfrac, int* nphgram,
-    int* totalp, int* rcounts, int* scounts,
-    struct S_mycommf* mycomm, int* nbor, int* pcoord,
-    int* sdoms, int* scoord, int* nbound, int* bcond, int* bounds,
-    int* ftypes, int* cfields, int* ctypes, int* fsizes,
-    int* stats, int* repiter, int* verbose) {
+
+void oh13_init_(int* sdid, int* nspec, int* maxfrac, int* nphgram,
+                int* totalp, int* rcounts, int* scounts,
+                struct S_mycommf* mycomm, int* nbor, int* pcoord,
+                int* sdoms, int* scoord, int* nbound, int* bcond, int* bounds,
+                int* ftypes, int* cfields, int* ctypes, int* fsizes,
+                int* stats, int* repiter, int* verbose) {
     init3(&sdid, *nspec, *maxfrac, &nphgram, &totalp, &rcounts, &scounts,
-        NULL, NULL, 0, NULL, mycomm, &nbor, pcoord, &sdoms, scoord, *nbound,
-        bcond, &bounds, ftypes, cfields, -1, ctypes, &fsizes,
-        *stats, *repiter, *verbose, 1);
+          NULL, NULL, 0, NULL, mycomm, &nbor, pcoord, &sdoms, scoord, *nbound,
+          bcond, &bounds, ftypes, cfields, -1, ctypes, &fsizes,
+          *stats, *repiter, *verbose, 1);
 }
-void
-oh13_init(int** sdid, int nspec, int maxfrac, int** nphgram,
-    int** totalp, int** rcounts, int** scounts,
-    void* mycomm, int** nbor, int* pcoord,
-    int** sdoms, int* scoord, int nbound, int* bcond, int** bounds,
-    int* ftypes, int* cfields, int* ctypes, int** fsizes,
-    int stats, int repiter, int verbose) {
+
+void oh13_init(int** sdid, int nspec, int maxfrac, int** nphgram,
+               int** totalp, int** rcounts, int** scounts,
+               void* mycomm, int** nbor, int* pcoord,
+               int** sdoms, int* scoord, int nbound, int* bcond, int** bounds,
+               int* ftypes, int* cfields, int* ctypes, int** fsizes,
+               int stats, int repiter, int verbose) {
     init3(sdid, nspec, maxfrac, nphgram, totalp, rcounts, scounts, NULL, NULL,
-        0, (struct S_mycommc*)mycomm, NULL, nbor, pcoord, sdoms, scoord,
-        nbound, bcond, bounds, ftypes, cfields, 0, ctypes, fsizes,
-        stats, repiter, verbose, 1);
+          0, (struct S_mycommc*)mycomm, NULL, nbor, pcoord, sdoms, scoord,
+          nbound, bcond, bounds, ftypes, cfields, 0, ctypes, fsizes,
+          stats, repiter, verbose, 1);
 }
-void
-init3(int** sdid, int nspec, int maxfrac, int** nphgram,
-    int** totalp, int** rcounts, int** scounts,
-    struct S_particle** pbuf, int** pbase, int maxlocalp,
-    struct S_mycommc* mycommc, struct S_mycommf* mycommf,
-    int** nbor, int* pcoord, int** sdoms, int* scoord,
-    int nbound, int* bcond, int** bounds, int* ftypes,
-    int* cfields, int cfid, int* ctypes, int** fsizes,
-    int stats, int repiter, int verbose, int skip2) {
+
+void init3(int** sdid, int nspec, int maxfrac, int** nphgram,
+           int** totalp, int** rcounts, int** scounts,
+           struct S_particle** pbuf, int** pbase, int maxlocalp,
+           struct S_mycommc* mycommc, struct S_mycommf* mycommf,
+           int** nbor, int* pcoord, int** sdoms, int* scoord,
+           int nbound, int* bcond, int** bounds, int* ftypes,
+           int* cfields, int cfid, int* ctypes, int** fsizes,
+           int stats, int repiter, int verbose, int skip2) {
     int nn;
     int(*sd)[OH_DIMENSION][2] = (int(*)[OH_DIMENSION][2]) * sdoms;
     double(*sdf)[OH_DIMENSION][2];
@@ -107,23 +105,23 @@ init3(int** sdid, int nspec, int maxfrac, int** nphgram,
 
     if (skip2)
         init1(sdid, nspec, maxfrac, nphgram, totalp, rcounts, scounts,
-            mycommc, mycommf, nbor, pcoord, stats, repiter, verbose);
+              mycommc, mycommf, nbor, pcoord, stats, repiter, verbose);
     else
         init2(sdid, nspec, maxfrac, nphgram, totalp, pbuf, pbase, maxlocalp,
-            mycommc, mycommf, nbor, pcoord, stats, repiter, verbose);
+              mycommc, mycommf, nbor, pcoord, stats, repiter, verbose);
     excludeLevel2 = skip2;
     nn = nOfNodes;
 
     if (!sd) {
         sd = (int(*)[OH_DIMENSION][2])
             (*sdoms = (int*)mem_alloc(sizeof(int), nn * OH_DIMENSION * 2,
-                "SubDomains"));
+                                      "SubDomains"));
         sd[0][OH_DIM_X][OH_LOWER] = 0;  sd[0][OH_DIM_X][OH_UPPER] = -1;
     }
     if (!bd)
         bd = (int(*)[OH_DIMENSION][2])
         (*bounds = (int*)mem_alloc(sizeof(int), nn * OH_DIMENSION * 2,
-            "Boundaries"));
+                                   "Boundaries"));
 
     for (d = 0, n = 1, m = OH_NEIGHBORS >> 1; d < OH_DIMENSION; d++, n *= 3) {
         int nl = DstNeighbors[m - n], nu = DstNeighbors[m + n];
@@ -156,10 +154,10 @@ init3(int** sdid, int nspec, int maxfrac, int** nphgram,
     }
     init_fields(ft, cfields, cfid, ct, nbound, sd[myRank], fsizes);
 }
-static void
-init_subdomain_actively(int(*sd)[OH_DIMENSION][2], int sc[OH_DIMENSION][2],
-    int* pcoord, int bc[OH_DIMENSION][2],
-    int(*bd)[OH_DIMENSION][2], int nb, int bbase) {
+
+static void init_subdomain_actively(int(*sd)[OH_DIMENSION][2], int sc[OH_DIMENSION][2],
+                                    int* pcoord, int bc[OH_DIMENSION][2],
+                                    int(*bd)[OH_DIMENSION][2], int nb, int bbase) {
     int nn = nOfNodes, pqr = 1;
     int d, lu, i, j, k, x, y, z, n;
 
@@ -175,7 +173,7 @@ init_subdomain_actively(int(*sd)[OH_DIMENSION][2], int sc[OH_DIMENSION][2],
             errstop("# of %c-nodes (%d) should be positive", Message.xyz[d], n);
         if (size <= 0)
             errstop("upper edge of %c-coordinate (%d) should be greater than "
-                "lower edge (%d)", Message.xyz[d], up, lo);
+                    "lower edge (%d)", Message.xyz[d], up, lo);
         ave = Grid[d].light.size = size / n;
         Grid[d].light.rfsize = 1.0 / (double)ave;
         Grid[d].light.rfsizeplus = 1.0 / (double)(ave + 1);
@@ -197,22 +195,22 @@ init_subdomain_actively(int(*sd)[OH_DIMENSION][2], int sc[OH_DIMENSION][2],
     if (pqr != nn) {
         if (OH_DIMENSION == 1)
             errstop("<# of x-nodes>(%d) should be eqal to <# of nodes>(%d)",
-                pcoord[0], nn);
+                    pcoord[0], nn);
         else if (OH_DIMENSION == 2)
             errstop("<# of x-nodes>(%d) * <# of y-nodes>(%d) "
-                "should be eqal to <# of nodes>(%d)",
-                pcoord[0], pcoord[1], nn);
+                    "should be eqal to <# of nodes>(%d)",
+                    pcoord[0], pcoord[1], nn);
         else
             errstop("<# of x-nodes>(%d) * <# of y-nodes>(%d) * <# of z-nodes>(%d) "
-                "should be eqal to <# of nodes>(%d)",
-                pcoord[0], pcoord[1], pcoord[2], nn);
+                    "should be eqal to <# of nodes>(%d)",
+                    pcoord[0], pcoord[1], pcoord[2], nn);
     }
     for (d = 0; d < OH_DIMENSION; d++) {
         for (lu = OH_LOWER; lu <= OH_UPPER; lu++) {
             if (bc[d][lu] < bbase || bc[d][lu] >= nb + bbase)
                 errstop("system's %s boundary condition for %c-coordinate %d is "
-                    "invalid",
-                    Message.loup[lu], Message.xyz[d], bc[d][lu]);
+                        "invalid",
+                        Message.loup[lu], Message.xyz[d], bc[d][lu]);
         }
     }
     for (i = 0, z = Grid[OH_DIM_Z].coord[OH_LOWER], n = 0; i < Grid[OH_DIM_Z].n; i++) {
@@ -256,13 +254,13 @@ init_subdomain_actively(int(*sd)[OH_DIMENSION][2], int sc[OH_DIMENSION][2],
         }
     }
 }
-static void
-init_subdomain_passively(int(*sd)[OH_DIMENSION][2],
-    int(*bd)[OH_DIMENSION][2], int nb, int bbase) {
+
+static void init_subdomain_passively(int(*sd)[OH_DIMENSION][2],
+                                     int(*bd)[OH_DIMENSION][2], int nb, int bbase) {
     int nn = nOfNodes;
     struct S_subdomdesc* sdd = SubDomainDesc =
         (struct S_subdomdesc*)mem_alloc(sizeof(struct S_subdomdesc), nn,
-            "SubDomainDesc");
+                                        "SubDomainDesc");
     int min[OH_DIMENSION], max[OH_DIMENSION];
     int smin[OH_DIMENSION], smax[OH_DIMENSION];
     int me = myRank;
@@ -285,12 +283,12 @@ init_subdomain_passively(int(*sd)[OH_DIMENSION][2],
             if (up > max[d])  max[d] = up;
             if (n <= 0)
                 errstop("subdomain %d has %c-coordinate lower boundary %d "
-                    "not less than upper boundary %d", i, Message.xyz[d], lo, up);
+                        "not less than upper boundary %d", i, Message.xyz[d], lo, up);
             for (lu = OH_LOWER; lu <= OH_UPPER; lu++) {
                 if (bd[i][d][lu] < bbase || bd[i][d][lu] >= nb + bbase)
                     errstop("rank-%d's %s boundary condition for %c-coordinate %d is "
-                        "invalid",
-                        i, Message.loup[lu], Message.xyz[d], bd[i][d][lu]);
+                            "invalid",
+                            i, Message.loup[lu], Message.xyz[d], bd[i][d][lu]);
             }
         }
         sdd[i].id = i;
@@ -313,22 +311,21 @@ init_subdomain_passively(int(*sd)[OH_DIMENSION][2],
                     int dsize = max[dd] - min[dd];
                     if (diff != 0 && diff != dsize && diff != -dsize)
                         local_errstop("rank-%d and its %c-%s neighbor rank-%d have "
-                            "incompatible %s/%s boundaries of %c-coordinate "
-                            "%d and %d",
-                            me, Message.xyz[d], Message.loup[lu], n,
-                            Message.loup[lu], Message.loup[OH_UPPER - lu],
-                            Message.xyz[dd],
-                            sd[me][dd][lu], sd[n][dd][OH_UPPER - lu]);
-                }
-                else {
+                                      "incompatible %s/%s boundaries of %c-coordinate "
+                                      "%d and %d",
+                                      me, Message.xyz[d], Message.loup[lu], n,
+                                      Message.loup[lu], Message.loup[OH_UPPER - lu],
+                                      Message.xyz[dd],
+                                      sd[me][dd][lu], sd[n][dd][OH_UPPER - lu]);
+                } else {
                     for (l = OH_LOWER; l <= OH_UPPER; l++) {
                         if (sd[n][dd][l] != sd[me][dd][l])
                             local_errstop("rank-%d and its %c-%s neighbor rank-%d have "
-                                "incompatible %s boundary of %c-coordinate "
-                                "%d and %d",
-                                me, Message.xyz[d], Message.loup[lu], n,
-                                Message.loup[l], Message.xyz[dd],
-                                sd[me][dd][l], sd[n][dd][l]);
+                                          "incompatible %s boundary of %c-coordinate "
+                                          "%d and %d",
+                                          me, Message.xyz[d], Message.loup[lu], n,
+                                          Message.loup[l], Message.xyz[dd],
+                                          sd[me][dd][l], sd[n][dd][l]);
                     }
                 }
             }
@@ -360,8 +357,7 @@ init_subdomain_passively(int(*sd)[OH_DIMENSION][2],
                     up[dd] = sdd[i].coord[dd].c[OH_UPPER];
                 }
                 break;
-            }
-            else {
+            } else {
                 sdd[i].coord[d].h = h[d];
             }
         }
@@ -369,8 +365,8 @@ init_subdomain_passively(int(*sd)[OH_DIMENSION][2],
     }
     for (d = 0; d < OH_DIMENSION - 1; d++)  sdd[h[d]].coord[d].n = nn - h[d];
 }
-static int
-comp_xyz(const void* aa, const void* bb) {
+
+static int comp_xyz(const void* aa, const void* bb) {
     struct S_subdomdesc* a = (struct S_subdomdesc*)aa, * b = (struct S_subdomdesc*)bb;
     int d;
 
@@ -386,6 +382,7 @@ comp_xyz(const void* aa, const void* bb) {
     }
     return(a->id < b->id ? -1 : 1);
 }
+
 #if OH_DIMENSION==1
 #define Field_Disp(F,X,Y,Z) (FieldDesc[F].esize * (X))
 #elif OH_DIMENSION==2
@@ -398,9 +395,9 @@ comp_xyz(const void* aa, const void* bb) {
    ((X) + FieldDesc[F].size[OH_DIM_X] *\
     ((Y) + FieldDesc[F].size[OH_DIM_Y] * (Z))))
 #endif
-static void
-init_fields(int(*ft)[OH_FTYPE_N], int* cf, int cfid, int(*ct)[2][OH_CTYPE_N],
-    int nb, int sd[OH_DIMENSION][2], int** fsizes) {
+
+static void init_fields(int(*ft)[OH_FTYPE_N], int* cf, int cfid, int(*ct)[2][OH_CTYPE_N],
+                        int nb, int sd[OH_DIMENSION][2], int** fsizes) {
     struct S_flddesc* fd;
     struct S_borderexc(*bx)[2][OH_DIMENSION][2];
     int(*fs)[OH_DIMENSION][2] = (int(*)[OH_DIMENSION][2]) * fsizes;
@@ -418,13 +415,13 @@ init_fields(int(*ft)[OH_FTYPE_N], int* cf, int cfid, int(*ct)[2][OH_CTYPE_N],
     nOfExc = ne;
 
     FieldDesc = fd = (struct S_flddesc*)mem_alloc(sizeof(struct S_flddesc), nf,
-        "FieldDesc");
+                                                  "FieldDesc");
 #ifndef OH_POS_AWARE
     FieldTypes = (int(*)[OH_FTYPE_N])
         mem_alloc(sizeof(int), nf * OH_FTYPE_N, "FieldTypes");
     BoundaryCommTypes = (int(*)[2][OH_CTYPE_N])
         mem_alloc(sizeof(int), ne * nb * 2 * OH_CTYPE_N,
-            "BoundaryCommTypes");
+                  "BoundaryCommTypes");
     memcpy(FieldTypes, ft, sizeof(int) * nf * OH_FTYPE_N);
     memcpy(BoundaryCommTypes, ct, sizeof(int) * ne * nb * 2 * OH_CTYPE_N);
     ft = FieldTypes;  ct = BoundaryCommTypes;
@@ -437,7 +434,7 @@ init_fields(int(*ft)[OH_FTYPE_N], int* cf, int cfid, int(*ct)[2][OH_CTYPE_N],
     if (!fs)
         fs = (int(*)[OH_DIMENSION][2])
         (*fsizes = (int*)mem_alloc(sizeof(int), nf * OH_DIMENSION * 2,
-            "FieldSizes"));
+                                   "FieldSizes"));
     for (f = 0; f < nf; f++) {
         int lo = ft[f][OH_FTYPE_LO], up = ft[f][OH_FTYPE_UP];
         fd[f].esize = ft[f][OH_FTYPE_ES];
@@ -453,7 +450,7 @@ init_fields(int(*ft)[OH_FTYPE_N], int* cf, int cfid, int(*ct)[2][OH_CTYPE_N],
         int lo, up;
         if (f >= nf)
             errstop("boundary communication #%d cannot be defined for "
-                "undefined field #%d", e - cfid, f - cfid);
+                    "undefined field #%d", e - cfid, f - cfid);
         lo = fd[f].ext[OH_LOWER];  up = fd[f].ext[OH_UPPER];
         for (b = 0; b < nb; b++, i++) {
             int sl = ct[i][OH_LOWER][OH_CTYPE_SIZE];
@@ -494,16 +491,18 @@ init_fields(int(*ft)[OH_FTYPE_N], int* cf, int cfid, int(*ct)[2][OH_CTYPE_N],
             for (lu = 0; lu < 2; lu++)
                 bx[e][1][d][lu].send.deriv = bx[e][1][d][lu].recv.deriv = 0;
         }
+
 #ifdef OH_POS_AWARE
         set_border_exchange(e, 0, e < ne - 1 ? MPI_DOUBLE : MPI_LONG_LONG_INT);
 #else
         set_border_exchange(e, 0, MPI_DOUBLE);
 #endif
+
     }
     clear_border_exchange();
 }
-void
-set_field_descriptors(int(*ft)[OH_FTYPE_N], int sd[OH_DIMENSION][2], int ps) {
+
+void set_field_descriptors(int(*ft)[OH_FTYPE_N], int sd[OH_DIMENSION][2], int ps) {
 
     int nf = nOfFields;
     struct S_flddesc* fd = FieldDesc;
@@ -523,8 +522,8 @@ set_field_descriptors(int(*ft)[OH_FTYPE_N], int sd[OH_DIMENSION][2], int ps) {
             fd[f].red.base + es;
     }
 }
-static void
-set_border_exchange(int e, int ps, MPI_Datatype type) {
+
+static void set_border_exchange(int e, int ps, MPI_Datatype type) {
     struct S_borderexc(*bx)[2] = BorderExc[e][ps];
     int f = BoundaryCommFields[e];
     int nb = nOfBoundaries;
@@ -563,17 +562,17 @@ set_border_exchange(int e, int ps, MPI_Datatype type) {
     }
     for (lu = OH_LOWER; lu <= OH_UPPER; lu++) {
         set_border_comm(esize, f, xyz, wdh, exti, exto, soff, ssize, lu, 0, type,
-            bx);
+                        bx);
         set_border_comm(esize, f, xyz, wdh, exti, exto, roff, rsize, lu, 1, type,
-            bx);
+                        bx);
     }
 }
-static void
-set_border_comm(int esize, int f, int* xyz, int* wdh,
-    int exti[OH_DIMENSION][2], int exto[OH_DIMENSION][2],
-    int off[OH_DIMENSION][2], int size[OH_DIMENSION][2],
-    int lu, int sr, MPI_Datatype basetype,
-    struct S_borderexc bx[OH_DIMENSION][2]) {
+
+static void set_border_comm(int esize, int f, int* xyz, int* wdh,
+                            int exti[OH_DIMENSION][2], int exto[OH_DIMENSION][2],
+                            int off[OH_DIMENSION][2], int size[OH_DIMENSION][2],
+                            int lu, int sr, MPI_Datatype basetype,
+                            struct S_borderexc bx[OH_DIMENSION][2]) {
     int bl[2] = { 1,1 };
     MPI_Datatype tmptype[2] = { MPI_DATATYPE_NULL,MPI_UB };
     int w = wdh[OH_DIM_X], wd = w * esize;
@@ -604,71 +603,62 @@ set_border_comm(int esize, int f, int* xyz, int* wdh,
     if (OH_DIMENSION == 1) {
         if ((s = size[OH_DIM_X][lu]) == 0) {
             bcx->buf = bcx->count = 0;  bcx->type = MPI_DATATYPE_NULL;
-        }
-        else {
+        } else {
             bcx->type = basetype;
             bcx->count = s * esize;
             bcx->buf =
                 Field_Disp(f,
-                    lower ? off[OH_DIM_X][lu] : xyz[OH_DIM_X] + off[OH_DIM_X][lu],
-                    0, 0);
+                           lower ? off[OH_DIM_X][lu] : xyz[OH_DIM_X] + off[OH_DIM_X][lu],
+                           0, 0);
         }
-    }
-    else if (OH_DIMENSION == 2) {
+    } else if (OH_DIMENSION == 2) {
         if ((s = size[OH_DIM_X][lu]) == 0) {
             bcx->buf = bcx->count = 0;  bcx->type = MPI_DATATYPE_NULL;
-        }
-        else {
+        } else {
             MPI_Type_vector(yexti, s * esize, wd, basetype, &(bcx->type));
             MPI_Type_commit(&(bcx->type));  bcx->deriv = 1;
             bcx->count = 1;
             bcx->buf =
                 Field_Disp(f,
-                    lower ? off[OH_DIM_X][lu] : xyz[OH_DIM_X] + off[OH_DIM_X][lu],
-                    exti[OH_DIM_Y][OH_LOWER], 0);
+                           lower ? off[OH_DIM_X][lu] : xyz[OH_DIM_X] + off[OH_DIM_X][lu],
+                           exti[OH_DIM_Y][OH_LOWER], 0);
         }
         if ((s = size[OH_DIM_Y][lu]) == 0) {
             bcy->buf = bcy->count = 0;  bcy->type = MPI_DATATYPE_NULL;
-        }
-        else {
+        } else {
             if (xexto == w) {
                 bcy->type = basetype;
                 bcy->count = s * wd;
-            }
-            else {
+            } else {
                 MPI_Type_vector(s, xexto * esize, wd, basetype, &(bcy->type));
                 MPI_Type_commit(&(bcy->type));  bcy->deriv = 1;
                 bcy->count = 1;
             }
             bcy->buf =
                 Field_Disp(f, exto[OH_DIM_X][OH_LOWER],
-                    lower ? off[OH_DIM_Y][lu] : xyz[OH_DIM_Y] + off[OH_DIM_Y][lu],
-                    0);
+                           lower ? off[OH_DIM_Y][lu] : xyz[OH_DIM_Y] + off[OH_DIM_Y][lu],
+                           0);
         }
-    }
-    else {
+    } else {
         if ((s = size[OH_DIM_X][lu]) == 0) {
             bcx->buf = bcx->count = 0;  bcx->type = MPI_DATATYPE_NULL;
-        }
-        else {
+        } else {
             MPI_Type_vector(yexti, s * esize, wd, basetype, tmptype);
             MPI_Type_struct(2, bl, dispz, tmptype, &(bcx->type));
             MPI_Type_commit(&(bcx->type));  bcx->deriv = 1;
             bcx->count = zexti;
             bcx->buf =
                 Field_Disp(f,
-                    lower ? off[OH_DIM_X][lu] : xyz[OH_DIM_X] + off[OH_DIM_X][lu],
-                    exti[OH_DIM_Y][OH_LOWER], exti[OH_DIM_Z][OH_LOWER]);
+                           lower ? off[OH_DIM_X][lu] : xyz[OH_DIM_X] + off[OH_DIM_X][lu],
+                           exti[OH_DIM_Y][OH_LOWER], exti[OH_DIM_Z][OH_LOWER]);
         }
         if ((s = size[OH_DIM_Y][lu]) == 0) {
             bcy->buf = bcy->count = 0;  bcy->type = MPI_DATATYPE_NULL;
-        }
-        else {
+        } else {
             if (xexto == w) {
                 MPI_Type_vector(zexti, s * wd, wd * dp, basetype, &(bcy->type));
                 bcy->count = 1;
-            }
-            else {
+            } else {
                 MPI_Type_vector(s, xexto * esize, wd, basetype, tmptype);
                 MPI_Type_struct(2, bl, dispz, tmptype, &(bcy->type));
                 bcy->count = zexti;
@@ -676,27 +666,23 @@ set_border_comm(int esize, int f, int* xyz, int* wdh,
             MPI_Type_commit(&(bcy->type));  bcy->deriv = 1;
             bcy->buf =
                 Field_Disp(f, exto[OH_DIM_X][OH_LOWER],
-                    lower ? off[OH_DIM_Y][lu] : xyz[OH_DIM_Y] + off[OH_DIM_Y][lu],
-                    exti[OH_DIM_Z][OH_LOWER]);
+                           lower ? off[OH_DIM_Y][lu] : xyz[OH_DIM_Y] + off[OH_DIM_Y][lu],
+                           exti[OH_DIM_Z][OH_LOWER]);
         }
         if ((s = size[OH_DIM_Z][lu]) == 0) {
             bcz->buf = bcz->count = 0;  bcz->type = MPI_DATATYPE_NULL;
-        }
-        else {
+        } else {
             if (xexto == w && yexto == dp) {
                 bcz->type = basetype;
                 bcz->count = s * wd * dp;
-            }
-            else {
+            } else {
                 if (xexto == w) {
                     MPI_Type_vector(s, wd * yexto, wd * dp, basetype, &(bcz->type));
                     bcz->count = 1;
-                }
-                else if (yexto == dp) {
+                } else if (yexto == dp) {
                     MPI_Type_vector(s * yexto, xexto * esize, wd, basetype, &(bcz->type));
                     bcz->count = 1;
-                }
-                else {
+                } else {
                     MPI_Type_vector(yexto, xexto * esize, wd, basetype, tmptype);
                     MPI_Type_struct(2, bl, dispz, tmptype, &(bcz->type));
                     bcz->count = s;
@@ -705,13 +691,13 @@ set_border_comm(int esize, int f, int* xyz, int* wdh,
             }
             bcz->buf =
                 Field_Disp(f, exto[OH_DIM_X][OH_LOWER], exto[OH_DIM_Y][OH_LOWER],
-                    lower ? off[OH_DIM_Z][lu] :
-                    xyz[OH_DIM_Z] + off[OH_DIM_Z][lu]);
+                           lower ? off[OH_DIM_Z][lu] :
+                           xyz[OH_DIM_Z] + off[OH_DIM_Z][lu]);
         }
     }
 }
-void
-clear_border_exchange() {
+
+void clear_border_exchange() {
     int ne = nOfExc, e, d, lu;
     struct S_borderexc(*bx)[2][OH_DIMENSION][2] = BorderExc;
 
@@ -731,12 +717,12 @@ clear_border_exchange() {
         }
     }
 }
-void
-oh3_grid_size_(double size[OH_DIMENSION]) {
+
+void oh3_grid_size_(double size[OH_DIMENSION]) {
     oh3_grid_size(size);
 }
-void
-oh3_grid_size(double size[OH_DIMENSION]) {
+
+void oh3_grid_size(double size[OH_DIMENSION]) {
     int d, n, nn = nOfNodes;
     for (d = 0; d < OH_DIMENSION; d++) {
         double s = (Grid[d].gsize = size[d]);
@@ -759,16 +745,16 @@ oh3_grid_size(double size[OH_DIMENSION]) {
         }
     }
 }
-int
-oh3_transbound_(int* currmode, int* stats) {
+
+int oh3_transbound_(int* currmode, int* stats) {
     return(transbound3(*currmode, *stats, 3));
 }
-int
-oh3_transbound(int currmode, int stats) {
+
+int oh3_transbound(int currmode, int stats) {
     return(transbound3(currmode, stats, 3));
 }
-static int
-transbound3(int currmode, int stats, int level) {
+
+static int transbound3(int currmode, int stats, int level) {
     int oldp = RegionId[1], newp;
 
     currmode = excludeLevel2 ? transbound1(currmode, stats, 1) :
@@ -780,6 +766,7 @@ transbound3(int currmode, int stats, int level) {
     }
     return(currmode);
 }
+
 #define Map_Particle_To_Neighbor(XYZ,RID,DIM,N,INC) {\
   double xyz=*XYZ;\
   if (xyz<SubDomainsFloat[RID][DIM][OH_LOWER]) {\
@@ -796,51 +783,46 @@ transbound3(int currmode, int stats, int level) {
     }\
   }\
 }
+
 #define Neighbor_Id(N) ((n=(N))<0 ? ((n=-n-1)<nOfNodes ? n : -1) : n)
+
 #if OH_DIMENSION==1
-int
-oh3_map_region_to_adjacent_node_(double* x, int* ps) {
+int oh3_map_region_to_adjacent_node_(double* x, int* ps) {
     return(oh3_map_particle_to_neighbor(x, *ps));
 }
-int
-oh3_map_particle_to_neighbor_(double* x, int* ps) {
+int oh3_map_particle_to_neighbor_(double* x, int* ps) {
     return(oh3_map_particle_to_neighbor(x, *ps));
 }
-int
-oh3_map_particle_to_neighbor(double* x, int ps) {
+int oh3_map_particle_to_neighbor(double* x, int ps) {
     int rid = RegionId[ps], n = OH_NEIGHBORS >> 1;
 
     Map_Particle_To_Neighbor(x, rid, OH_DIM_X, n, 1);
     return(Neighbor_Id(Neighbors[ps][n]));
 }
+
 #elif OH_DIMENSION==2
-int
-oh3_map_region_to_adjacent_node_(double* x, double* y, int* ps) {
+int oh3_map_region_to_adjacent_node_(double* x, double* y, int* ps) {
     return(oh3_map_particle_to_neighbor(x, y, *ps));
 }
-int
-oh3_map_particle_to_neighbor_(double* x, double* y, int* ps) {
+int oh3_map_particle_to_neighbor_(double* x, double* y, int* ps) {
     return(oh3_map_particle_to_neighbor(x, y, *ps));
 }
-int
-oh3_map_particle_to_neighbor(double* x, double* y, int ps) {
+int oh3_map_particle_to_neighbor(double* x, double* y, int ps) {
     int rid = RegionId[ps], n = OH_NEIGHBORS >> 1;
 
     Map_Particle_To_Neighbor(x, rid, OH_DIM_X, n, 1);
     Map_Particle_To_Neighbor(y, rid, OH_DIM_Y, n, 3);
     return(Neighbor_Id(Neighbors[ps][n]));
 }
+
 #else
-int
-oh3_map_region_to_adjacent_node_(double* x, double* y, double* z, int* ps) {
+int oh3_map_region_to_adjacent_node_(double* x, double* y, double* z, int* ps) {
     return(oh3_map_particle_to_neighbor(x, y, z, *ps));
 }
-int
-oh3_map_particle_to_neighbor_(double* x, double* y, double* z, int* ps) {
+int oh3_map_particle_to_neighbor_(double* x, double* y, double* z, int* ps) {
     return(oh3_map_particle_to_neighbor(x, y, z, *ps));
 }
-int
-oh3_map_particle_to_neighbor(double* x, double* y, double* z, int ps) {
+int oh3_map_particle_to_neighbor(double* x, double* y, double* z, int ps) {
     int rid = RegionId[ps], n = OH_NEIGHBORS >> 1;
 
     Map_Particle_To_Neighbor(x, rid, OH_DIM_X, n, 1);
@@ -849,6 +831,7 @@ oh3_map_particle_to_neighbor(double* x, double* y, double* z, int ps) {
     return(Neighbor_Id(Neighbors[ps][n]));
 }
 #endif
+
 #define Map_Particle_To_Subdomain(XYZ,DIM,SDOM) {\
   double thresh = Grid[DIM].light.fthresh;\
   if (XYZ<Grid[DIM].fcoord[OH_LOWER] || XYZ>=Grid[DIM].fcoord[OH_UPPER])\
@@ -858,21 +841,22 @@ oh3_map_particle_to_neighbor(double* x, double* y, double* z, int ps) {
   else  SDOM = (int)((XYZ - thresh) * Grid[DIM].light.rfsizeplus) + \
                Grid[DIM].light.n;\
 }
+
 #define Adjust_Subdomain(XYZ,DIM,SDOM,INC) {\
   if (XYZ<SubDomainsFloat[SDOM][DIM][OH_LOWER])  SDOM-=INC;\
   else if (XYZ>=SubDomainsFloat[SDOM][DIM][OH_UPPER])  SDOM+=INC;\
 }
+
 #if OH_DIMENSION==1
-int
-oh3_map_region_to_node_(double* x) {
+int oh3_map_region_to_node_(double* x) {
     return(oh3_map_particle_to_subdomain(*x));
 }
-int
-oh3_map_particle_to_subdomain_(double* x) {
+
+int oh3_map_particle_to_subdomain_(double* x) {
     return(oh3_map_particle_to_subdomain(*x));
 }
-int
-oh3_map_particle_to_subdomain(double x) {
+
+int oh3_map_particle_to_subdomain(double x) {
     int sdx;
 
     if (SubDomainDesc)  return(map_irregular_subdomain(x, 0.0, 0.0));
@@ -880,17 +864,17 @@ oh3_map_particle_to_subdomain(double x) {
     Adjust_Subdomain(x, OH_DIM_X, sdx, 1);
     return(sdx);
 }
+
 #elif OH_DIMENSION==2
-int
-oh3_map_region_to_node_(double* x, double* y) {
+int oh3_map_region_to_node_(double* x, double* y) {
     return(oh3_map_particle_to_subdomain(*x, *y));
 }
-int
-oh3_map_particle_to_subdomain_(double* x, double* y) {
+
+int oh3_map_particle_to_subdomain_(double* x, double* y) {
     return(oh3_map_particle_to_subdomain(*x, *y));
 }
-int
-oh3_map_particle_to_subdomain(double x, double y) {
+
+int oh3_map_particle_to_subdomain(double x, double y) {
     int sdx, sdy, sd, nx = Grid[OH_DIM_X].n;
 
     if (SubDomainDesc)  return(map_irregular_subdomain(x, y, 0.0));
@@ -901,17 +885,17 @@ oh3_map_particle_to_subdomain(double x, double y) {
     Adjust_Subdomain(y, OH_DIM_Y, sd, nx);
     return(sd);
 }
+
 #else
-int
-oh3_map_region_to_node_(double* x, double* y, double* z) {
+int oh3_map_region_to_node_(double* x, double* y, double* z) {
     return(oh3_map_particle_to_subdomain(*x, *y, *z));
 }
-int
-oh3_map_particle_to_subdomain_(double* x, double* y, double* z) {
+
+int oh3_map_particle_to_subdomain_(double* x, double* y, double* z) {
     return(oh3_map_particle_to_subdomain(*x, *y, *z));
 }
-int
-oh3_map_particle_to_subdomain(double x, double y, double z) {
+
+int oh3_map_particle_to_subdomain(double x, double y, double z) {
     int sdx, sdy, sdz, sd, nx = Grid[OH_DIM_X].n, nxy = nx * Grid[OH_DIM_Y].n;
 
     if (SubDomainDesc)  return(map_irregular_subdomain(x, y, z));
@@ -925,12 +909,12 @@ oh3_map_particle_to_subdomain(double x, double y, double z) {
     return(sd);
 }
 #endif
-int
-map_irregular_subdomain(double x, double y, double z) {
+
+int map_irregular_subdomain(double x, double y, double z) {
     return(map_irregular(x, y, z, OH_DIM_X, 0, nOfNodes));
 }
-static int
-map_irregular(double p0, double p1, double p2, int dim, int from, int n) {
+
+static int map_irregular(double p0, double p1, double p2, int dim, int from, int n) {
     double size = Grid[dim].fsize;
     int to = from + n, lo, up, i;
     struct S_subdomdesc* sd = SubDomainDesc;
@@ -944,16 +928,15 @@ map_irregular(double p0, double p1, double p2, int dim, int from, int n) {
             if (dim < OH_DIMENSION - 1) {
                 int ret = map_irregular(p1, p2, 0.0, dim + 1, i, n);
                 if (ret >= 0)  return(ret);
-            }
-            else
+            } else
                 return(sd[i].id);
         }
         i += n;
     }
     return(-1);
 }
-static int
-map_irregular_range(double p, int dim, int from, int to) {
+
+static int map_irregular_range(double p, int dim, int from, int to) {
     struct S_subdomdesc* sd = SubDomainDesc;
     int i;
 
@@ -970,60 +953,60 @@ map_irregular_range(double p, int dim, int from, int to) {
     }
     return(to);
 }
-void
-oh3_bcast_field_(void* pfld, void* sfld, int* ftype) {
+
+void oh3_bcast_field_(void* pfld, void* sfld, int* ftype) {
     int base = FieldDesc[*ftype - 1].bc.base;
     int* size = FieldDesc[*ftype - 1].bc.size;
 
     oh1_broadcast((double*)pfld + base, (double*)sfld + base, size[0], size[1],
-        MPI_DOUBLE, MPI_DOUBLE);
+                  MPI_DOUBLE, MPI_DOUBLE);
 }
-void
-oh3_bcast_field(void* pfld, void* sfld, int ftype) {
+
+void oh3_bcast_field(void* pfld, void* sfld, int ftype) {
     int base = FieldDesc[ftype].bc.base;
     int* size = FieldDesc[ftype].bc.size;
 
     oh1_broadcast((double*)pfld + base, (double*)sfld + base, size[0], size[1],
-        MPI_DOUBLE, MPI_DOUBLE);
+                  MPI_DOUBLE, MPI_DOUBLE);
 }
-void
-oh3_reduce_field_(void* pfld, void* sfld, int* ftype) {
+
+void oh3_reduce_field_(void* pfld, void* sfld, int* ftype) {
     int base = FieldDesc[*ftype - 1].red.base;
     int* size = FieldDesc[*ftype - 1].red.size;
 
     oh1_reduce((double*)pfld + base, (double*)sfld + base, size[0], size[1],
-        MPI_DOUBLE, MPI_DOUBLE, MPI_SUM, MPI_SUM);
+               MPI_DOUBLE, MPI_DOUBLE, MPI_SUM, MPI_SUM);
 }
-void
-oh3_reduce_field(void* pfld, void* sfld, int ftype) {
+
+void oh3_reduce_field(void* pfld, void* sfld, int ftype) {
     int base = FieldDesc[ftype].red.base;
     int* size = FieldDesc[ftype].red.size;
 
     oh1_reduce((double*)pfld + base, (double*)sfld + base, size[0], size[1],
-        MPI_DOUBLE, MPI_DOUBLE, MPI_SUM, MPI_SUM);
+               MPI_DOUBLE, MPI_DOUBLE, MPI_SUM, MPI_SUM);
 }
-void
-oh3_allreduce_field_(void* pfld, void* sfld, int* ftype) {
+
+void oh3_allreduce_field_(void* pfld, void* sfld, int* ftype) {
     int base = FieldDesc[*ftype - 1].red.base;
     int* size = FieldDesc[*ftype - 1].red.size;
 
     oh1_all_reduce((double*)pfld + base, (double*)sfld + base, size[0], size[1],
-        MPI_DOUBLE, MPI_DOUBLE, MPI_SUM, MPI_SUM);
+                   MPI_DOUBLE, MPI_DOUBLE, MPI_SUM, MPI_SUM);
 }
-void
-oh3_allreduce_field(void* pfld, void* sfld, int ftype) {
+
+void oh3_allreduce_field(void* pfld, void* sfld, int ftype) {
     int base = FieldDesc[ftype].red.base;
     int* size = FieldDesc[ftype].red.size;
 
     oh1_all_reduce((double*)pfld + base, (double*)sfld + base, size[0], size[1],
-        MPI_DOUBLE, MPI_DOUBLE, MPI_SUM, MPI_SUM);
+                   MPI_DOUBLE, MPI_DOUBLE, MPI_SUM, MPI_SUM);
 }
-void
-oh3_exchange_borders_(void* pfld, void* sfld, int* ctype, int* bcast) {
+
+void oh3_exchange_borders_(void* pfld, void* sfld, int* ctype, int* bcast) {
     oh3_exchange_borders(pfld, sfld, *ctype - 1, *bcast);
 }
-void
-oh3_exchange_borders(void* pfld, void* sfld, int ctype, int bcast) {
+
+void oh3_exchange_borders(void* pfld, void* sfld, int ctype, int bcast) {
     MPI_Status st;
     int d, lu;
     double* pf = (double*)pfld, * sf = (double*)sfld;
@@ -1036,8 +1019,8 @@ oh3_exchange_borders(void* pfld, void* sfld, int ctype, int bcast) {
             int rcount = bx->recv.count;
             if (scount && rcount)
                 MPI_Sendrecv(pf + bx->send.buf, scount, bx->send.type, dst, 0,
-                    pf + bx->recv.buf, rcount, bx->recv.type, src, 0,
-                    MCW, &st);
+                             pf + bx->recv.buf, rcount, bx->recv.type, src, 0,
+                             MCW, &st);
             else if (scount)
                 MPI_Send(pf + bx->send.buf, scount, bx->send.type, dst, 0, MCW);
             else if (rcount)
@@ -1053,8 +1036,8 @@ oh3_exchange_borders(void* pfld, void* sfld, int ctype, int bcast) {
                 struct S_borderexc* bxp = &BorderExc[ctype][0][d][lu];
                 struct S_borderexc* bxs = &BorderExc[ctype][1][d][lu];
                 oh1_broadcast(pf + bxp->recv.buf, sf + bxs->recv.buf,
-                    bxp->recv.count, bxs->recv.count,
-                    bxp->recv.type, bxs->recv.type);
+                              bxp->recv.count, bxs->recv.count,
+                              bxp->recv.type, bxs->recv.type);
             }
         }
     }

@@ -92,42 +92,42 @@ struct S_node {
     struct { int prime, sec, black, rank; } comm;
     struct S_node* parent, * sibling, * child;
     int id, parentid;
-    };
+};
 EXTERN struct S_node* Nodes, * NodesNext, ** NodeQueue;
 
 /* Heap structure for load rebalancing */
 struct S_heap {
     int n, * node, * index;
-    };
+};
 EXTERN struct S_heap LessHeap, GreaterHeap;
 
 /* Structured variables for particle transfer */
 struct S_commlist {
     int sid, rid, region, count, tag;     /* tag = spec + nOfSpecies*sec */
-    };
+};
 EXTERN struct S_commlist* CommList, * SecRList;
 EXTERN int RLIndex[OH_NEIGHBORS + 1];
 EXTERN int SLHeadTail[2], SecSLHeadTail[2], SecRLSize;
 EXTERN MPI_Datatype T_Commlist;
 struct S_commsched_context {
     int neighbor, sender, spec, comidx, dones, donen;
-    };
+};
 
 /* Structured variables for MPI communicator */
 EXTERN MPI_Group GroupWorld;
 EXTERN struct {
     int n;
     MPI_Comm* body;       /* [nOfNodes] */
-    } Comms;
+} Comms;
 struct S_mycommc {
     MPI_Comm prime, sec;
     int rank, root, black;
-    };
+};
 EXTERN struct S_mycommc* MyComm, * MyCommC;
 EXTERN struct S_mycommf {
     int prime, sec;
     int rank, root, black;
-    } *MyCommF;
+} *MyCommF;
 
 /* Neighboring information */
 EXTERN int Neighbors[3][OH_NEIGHBORS], SrcNeighbors[OH_NEIGHBORS];
@@ -177,31 +177,31 @@ static char* StatsPartStrings[STATS_PARTS] = {
   "put&get[sec,ave]",
   "transition to pri",
   "transition to sec",
-    };
+};
 #endif
 
 struct S_statscurr {
     struct {
         double value, val[2 * STATS_TIMINGS + 2];
         int key, ev[2 * STATS_TIMINGS + 2];
-        } time;
+    } time;
     dint part[STATS_PARTS];
-    };
+};
 struct S_statstime {
     double min, max, total;
     int ev;
-    };
+};
 struct S_statspart {
     dint min, max, total;
-    };
+};
 struct S_statstotal {
     struct S_statstime time[2 * STATS_TIMINGS];
     struct S_statspart part[STATS_PARTS];
-    };
+};
 EXTERN struct S_stats {
     struct S_statscurr curr;
     struct S_statstotal subtotal, total;
-    } Stats;
+} Stats;
 
 EXTERN MPI_Datatype T_StatsTime;
 EXTERN MPI_Op Op_StatsTime, Op_StatsPart;
@@ -212,13 +212,13 @@ void oh1_neighbors(int** nbor);
 void oh1_families(int** famindex, int** members);
 int  oh1_accom_mode();
 void oh1_broadcast(void* pbuf, void* sbuf, int pcount, int scount,
-    MPI_Datatype ptype, MPI_Datatype stype);
+                   MPI_Datatype ptype, MPI_Datatype stype);
 void oh1_all_reduce(void* pbuf, void* sbuf, int pcount, int scount,
-    MPI_Datatype ptype, MPI_Datatype stype,
-    MPI_Op pop, MPI_Op sop);
+                    MPI_Datatype ptype, MPI_Datatype stype,
+                    MPI_Op pop, MPI_Op sop);
 void oh1_reduce(void* pbuf, void* sbuf, int pcount, int scount,
-    MPI_Datatype ptype, MPI_Datatype stype,
-    MPI_Op pop, MPI_Op sop);
+                MPI_Datatype ptype, MPI_Datatype stype,
+                MPI_Op pop, MPI_Op sop);
 void oh1_init_stats(int key, int ps);
 void oh1_stats_time(int key, int ps);
 void oh1_show_stats(int step, int currmode);
@@ -226,35 +226,35 @@ void oh1_print_stats(int nstep);
 void oh1_verbose(char* message);
 
 void oh1_init(int** sdid, int nspec, int maxfrac, int** nphgram,
-    int** totalp, int** rcounts, int** scounts, void* mycomm,
-    int** nbor, int* pcoord, int stats, int repiter, int verbose);
+              int** totalp, int** rcounts, int** scounts, void* mycomm,
+              int** nbor, int* pcoord, int stats, int repiter, int verbose);
 int  oh1_transbound(int currmode, int stats);
 
 void oh1_neighbors_(int* nbor);
 void oh1_families_(int* famindex, int* members);
 int  oh1_accom_mode_();
 void oh1_broadcast_(void* pbuf, void* sbuf, int* pcount, int* scount,
-    int* ptype, int* stype);
+                    int* ptype, int* stype);
 void oh1_all_reduce_(void* pbuf, void* sbuf, int* pcount, int* scount,
-    int* ptype, int* stype, int* pop, int* sop);
+                     int* ptype, int* stype, int* pop, int* sop);
 void oh1_reduce_(void* pbuf, void* sbuf, int* pcount, int* scount,
-    int* ptype, int* stype, int* pop, int* sop);
+                 int* ptype, int* stype, int* pop, int* sop);
 void oh1_init_stats_(int* key, int* ps);
 void oh1_stats_time_(int* key, int* ps);
 void oh1_show_stats_(int* step, int* currmode);
 void oh1_print_stats_(int* nstep);
 void oh1_verbose_(char* message);
 void oh1_init_(int* sdid, int* nspec, int* maxfrac, int* nphgram,
-    int* totalp, int* rcounts, int* scounts,
-    struct S_mycommf* mycomm, int* nbor, int* pcoord, int* stats,
-    int* repiter, int* verbose);
+               int* totalp, int* rcounts, int* scounts,
+               struct S_mycommf* mycomm, int* nbor, int* pcoord, int* stats,
+               int* repiter, int* verbose);
 int  oh1_transbound_(int* currmode, int* stats);
 
 /* Prototypes for the functions called from higher-level library code */
 void  init1(int** sdid, int nspec, int maxfrac, int** nphgram,
-    int** totalp, int** rcounts, int** scounts,
-    struct S_mycommc* mycommc, struct S_mycommf* mycommf, int** nbor,
-    int* pcoord, int stats, int repiter, int verbose);
+            int** totalp, int** rcounts, int** scounts,
+            struct S_mycommc* mycommc, struct S_mycommf* mycommf, int** nbor,
+            int* pcoord, int stats, int repiter, int verbose);
 void* mem_alloc(int esize, int count, char* varname);
 void  mem_alloc_error(char* varname, size_t size);
 void  errstop(char* format, ...);

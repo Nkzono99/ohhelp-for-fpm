@@ -8,9 +8,9 @@
 */
 #include <mpi.h>
 struct S_mycommc {
-    MPI_Comm prime, sec;
-    int rank, root, black;
-    };
+        MPI_Comm prime, sec;
+        int rank, root, black;
+};
 #include "oh_config.h"
 
 #define oh_neighbors(A1) \
@@ -35,13 +35,13 @@ void oh1_neighbors(int** nbor);
 void oh1_families(int** famindex, int** members);
 int  oh1_accom_mode();
 void oh1_broadcast(void* pbuf, void* sbuf, int pcount, int scount,
-    MPI_Datatype ptype, MPI_Datatype stype);
+                   MPI_Datatype ptype, MPI_Datatype stype);
 void oh1_all_reduce(void* pbuf, void* sbuf, int pcount, int scount,
-    MPI_Datatype ptype, MPI_Datatype stype,
-    MPI_Op pop, MPI_Op sop);
+                    MPI_Datatype ptype, MPI_Datatype stype,
+                    MPI_Op pop, MPI_Op sop);
 void oh1_reduce(void* pbuf, void* sbuf, int pcount, int scount,
-    MPI_Datatype ptype, MPI_Datatype stype,
-    MPI_Op pop, MPI_Op sop);
+                MPI_Datatype ptype, MPI_Datatype stype,
+                MPI_Op pop, MPI_Op sop);
 void oh1_init_stats(int key, int ps);
 void oh1_stats_time(int key, int ps);
 void oh1_show_stats(int step, int currmode);
@@ -53,8 +53,8 @@ void oh1_verbose(char* message);
         oh1_init(A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13)
 #define oh_transbound(A1,A2) oh1_transbound(A1,A2)
 void oh1_init(int** sdid, int nspec, int maxfrac, int** nphgram,
-    int** totalp, int** rcounts, int** scounts, void* mycomm,
-    int** nbor, int* pcoord, int stats, int repiter, int verbose);
+              int** totalp, int** rcounts, int** scounts, void* mycomm,
+              int** nbor, int* pcoord, int stats, int repiter, int verbose);
 int  oh1_transbound(int currmode, int stats);
 
 #else
@@ -78,9 +78,9 @@ void oh2_inject_particle(struct S_particle* part);
         oh2_init(A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14)
 #define oh_transbound(A1,A2) oh2_transbound(A1,A2)
 void oh2_init(int** sdid, int nspec, int maxfrac, int** nphgram,
-    int** totalp, struct S_particle** pbuf, int** pbase,
-    int maxlocalp, void* mycomm, int** nbor,
-    int* pcoord, int stats, int repiter, int verbose);
+              int** totalp, struct S_particle** pbuf, int** pbase,
+              int maxlocalp, void* mycomm, int** nbor,
+              int* pcoord, int stats, int repiter, int verbose);
 int  oh2_transbound(int currmode, int stats);
 
 #else
@@ -124,17 +124,17 @@ oh_init(A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,A16,A17,A18,A19,A20,A
 oh3_init(A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,A16,A17,A18,A19,A20,A21,A22,A23)
 #define oh_transbound(A1,A2)            oh3_transbound(A1,A2)
 void oh3_init(int** sdid, int nspec, int maxfrac, int** nphgram, int** totalp,
-    struct S_particle** pbuf, int** pbase, int maxlocalp,
-    void* mycomm, int** nbor, int* pcoord,
-    int** sdoms, int* scoord, int nbound, int* bcond, int** bounds,
-    int* ftypes, int* cfields, int* ctypes, int** fsizes,
-    int stats, int repiter, int verbose);
+              struct S_particle** pbuf, int** pbase, int maxlocalp,
+              void* mycomm, int** nbor, int* pcoord,
+              int** sdoms, int* scoord, int nbound, int* bcond, int** bounds,
+              int* ftypes, int* cfields, int* ctypes, int** fsizes,
+              int stats, int repiter, int verbose);
 void oh13_init(int** sdid, int nspec, int maxfrac, int** nphgram,
-    int** totalp, int** rcounts, int** scounts,
-    void* mycomm, int** nbor, int* pcoord,
-    int** sdoms, int* scoord, int nbound, int* bcond, int** bounds,
-    int* ftypes, int* cfields, int* ctypes, int** fsizes,
-    int stats, int repiter, int verbose);
+               int** totalp, int** rcounts, int** scounts,
+               void* mycomm, int** nbor, int* pcoord,
+               int** sdoms, int* scoord, int nbound, int* bcond, int** bounds,
+               int* ftypes, int* cfields, int* ctypes, int** fsizes,
+               int stats, int repiter, int verbose);
 int  oh3_transbound(int currmode, int stats);
 
 #else
@@ -158,26 +158,26 @@ oh4p_init(A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,A16,A17,A18,A19,A20
 #define oh_remap_particle_to_subdomain(A1,A2,A3) \
         oh4p_remap_particle_to_subdomain(A1,A2,A3)
 void oh4p_init(int** sdid, const int nspec, const int maxfrac, int** totalp,
-    struct S_particle** pbuf, int** pbase, const int maxlocalp,
-    void* mycomm, int** nbor, int* pcoord, int** sdoms, int* scoord,
-    const int nbound, int* bcond, int** bounds, int* ftypes,
-    int* cfields, int* ctypes, int** fsizes,
-    const int stats, const int repiter, const int verbose);
+               struct S_particle** pbuf, int** pbase, const int maxlocalp,
+               void* mycomm, int** nbor, int* pcoord, int** sdoms, int* scoord,
+               const int nbound, int* bcond, int** bounds, int* ftypes,
+               int* cfields, int* ctypes, int** fsizes,
+               const int stats, const int repiter, const int verbose);
 int  oh4p_max_local_particles(const long long int npmax, const int maxfrac,
-    const int minmargin, const int hsthresh);
+                              const int minmargin, const int hsthresh);
 void oh4p_per_grid_histogram(int** pghgram);
 int  oh4p_transbound(int currmode, int stats);
 int  oh4p_map_particle_to_neighbor(struct S_particle* part, const int ps,
-    const int s);
+                                   const int s);
 int  oh4p_map_particle_to_subdomain(struct S_particle* part, const int ps,
-    const int s);
+                                    const int s);
 int  oh4p_inject_particle(const struct S_particle* part, const int ps);
 void oh4p_remove_mapped_particle(struct S_particle* part, const int ps,
-    const int s);
+                                 const int s);
 int  oh4p_remap_particle_to_neighbor(struct S_particle* part, const int ps,
-    const int s);
+                                     const int s);
 int  oh4p_remap_particle_to_subdomain(struct S_particle* part, const int ps,
-    const int s);
+                                      const int s);
 #else
 #define \
 oh_init(A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,A16,A17,A18,A19,A20,A21,A22,A23,A24,A25,A26) \
@@ -199,29 +199,29 @@ oh4s_init(A1,A2,A3,A4,A5,A6,A7,A8,A9,A10,A11,A12,A13,A14,A15,A16,A17,A18,A19,A20
 #define oh_remap_particle_to_subdomain(A1,A2,A3) \
         oh4s_remap_particle_to_subdomain(A1,A2,A3)
 void oh4s_init(int** sdid, const int nspec, const int maxfrac,
-    const long long int npmax, const int minmargin,
-    const int maxdensity, int** totalp, int** pbase,
-    int* maxlocalp, int* cbufsize, void* mycomm, int** nbor,
-    int* pcoord, int** sdoms, int* scoord, const int nbound,
-    int* bcond, int** bounds, int* ftypes, int* cfields,
-    int* ctypes, int** fsizes, int** zbound,
-    const int stats, const int repiter, const int verbose);
+               const long long int npmax, const int minmargin,
+               const int maxdensity, int** totalp, int** pbase,
+               int* maxlocalp, int* cbufsize, void* mycomm, int** nbor,
+               int* pcoord, int** sdoms, int* scoord, const int nbound,
+               int* bcond, int** bounds, int* ftypes, int* cfields,
+               int* ctypes, int** fsizes, int** zbound,
+               const int stats, const int repiter, const int verbose);
 void oh4s_particle_buffer(const int maxlocalp, struct S_particle** pbuf);
 void oh4s_per_grid_histogram(int** pghgram, int** pgindex);
 int  oh4s_transbound(int currmode, int stats);
 void oh4s_exchange_border_data(void* buf, void* sbuf, void* rbuf,
-    MPI_Datatype type);
+                               MPI_Datatype type);
 int  oh4s_map_particle_to_neighbor(struct S_particle* part, const int ps,
-    const int s);
+                                   const int s);
 int  oh4s_map_particle_to_subdomain(struct S_particle* part, const int ps,
-    const int s);
+                                    const int s);
 int  oh4s_inject_particle(const struct S_particle* part, const int ps);
 void oh4s_remove_mapped_particle(struct S_particle* part, const int ps,
-    const int s);
+                                 const int s);
 int  oh4s_remap_particle_to_neighbor(struct S_particle* part, const int ps,
-    const int s);
+                                     const int s);
 int  oh4s_remap_particle_to_subdomain(struct S_particle* part, const int ps,
-    const int s);
+                                      const int s);
 #endif
 #endif
 #endif

@@ -17,47 +17,41 @@ static int   try_primary2(int currmode, int level, int stats);
 static int   try_stable2(int currmode, int level, int stats);
 static void  rebalance2(int currmode, int level, int stats);
 static void  move_to_sendbuf_secondary(int secondary, int stats);
-static void  move_to_sendbuf_uw(int ps, int me, int* putmes, int cbase,
-    int* ctp, int nbase, int* ntp,
-    struct S_particle** rbb);
-static void  move_to_sendbuf_dw(int ps, int me, int* putmes, int ctail,
-    int* ctp, int ntail, int* ntp);
+static void  move_to_sendbuf_uw(int ps, int me, int* putmes, int cbase, int* ctp, int nbase, int* ntp, struct S_particle** rbb);
+static void  move_to_sendbuf_dw(int ps, int me, int* putmes, int ctail, int* ctp, int ntail, int* ntp);
 static void  move_injected_to_sendbuf();
-static void  move_injected_from_sendbuf(int* injected, int mysd,
-    struct S_particle** rbb);
+static void  move_injected_from_sendbuf(int* injected, int mysd, struct S_particle** rbb);
 static void  receive_particles(struct S_commlist* rlist, int rlsize, int* req);
-static void  send_particles(struct S_commlist* slist, int slsize, int myregion,
-    int parentregion, int* req);
+static void  send_particles(struct S_commlist* slist, int slsize, int myregion, int parentregion, int* req);
 
-void
-oh2_init_(int* sdid, int* nspec, int* maxfrac, int* nphgram,
-    int* totalp, struct S_particle* pbuf, int* pbase, int* maxlocalp,
-    struct S_mycommf* mycomm, int* nbor, int* pcoord,
-    int* stats, int* repiter, int* verbose) {
+void oh2_init_(int* sdid, int* nspec, int* maxfrac, int* nphgram,
+               int* totalp, struct S_particle* pbuf, int* pbase, int* maxlocalp,
+               struct S_mycommf* mycomm, int* nbor, int* pcoord,
+               int* stats, int* repiter, int* verbose) {
     specBase = 1;
     init2(&sdid, *nspec, *maxfrac, &nphgram, &totalp,
-        &pbuf, &pbase, *maxlocalp, NULL, mycomm, &nbor, pcoord,
-        *stats, *repiter, *verbose);
+          &pbuf, &pbase, *maxlocalp, NULL, mycomm, &nbor, pcoord,
+          *stats, *repiter, *verbose);
 }
-void
-oh2_init(int** sdid, int nspec, int maxfrac, int** nphgram,
-    int** totalp, struct S_particle** pbuf, int** pbase, int maxlocalp,
-    void* mycomm, int** nbor, int* pcoord,
-    int stats, int repiter, int verbose) {
+
+void oh2_init(int** sdid, int nspec, int maxfrac, int** nphgram,
+              int** totalp, struct S_particle** pbuf, int** pbase, int maxlocalp,
+              void* mycomm, int** nbor, int* pcoord,
+              int stats, int repiter, int verbose) {
     specBase = 0;
     init2(sdid, nspec, maxfrac, nphgram, totalp,
-        pbuf, pbase, maxlocalp, (struct S_mycommc*)mycomm, NULL, nbor, pcoord,
-        stats, repiter, verbose);
+          pbuf, pbase, maxlocalp, (struct S_mycommc*)mycomm, NULL, nbor, pcoord,
+          stats, repiter, verbose);
 }
-void
-init2(int** sdid, int nspec, int maxfrac, int** nphgram,
-    int** totalp, struct S_particle** pbuf, int** pbase, int maxlocalp,
-    struct S_mycommc* mycommc, struct S_mycommf* mycommf,
-    int** nbor, int* pcoord, int stats, int repiter, int verbose) {
+
+void init2(int** sdid, int nspec, int maxfrac, int** nphgram,
+           int** totalp, struct S_particle** pbuf, int** pbase, int maxlocalp,
+           struct S_mycommc* mycommc, struct S_mycommf* mycommf,
+           int** nbor, int* pcoord, int stats, int repiter, int verbose) {
     int ns, nn, nnns, s;
 
     init1(sdid, nspec, maxfrac, nphgram, totalp, NULL, NULL,
-        mycommc, mycommf, nbor, pcoord, stats, repiter, verbose);
+          mycommc, mycommf, nbor, pcoord, stats, repiter, verbose);
 
     ns = nOfSpecies;  nn = nOfNodes;  nnns = nn * ns;
 
@@ -67,7 +61,7 @@ init2(int** sdid, int nspec, int maxfrac, int** nphgram,
     else
         Particles = *pbuf =
         (struct S_particle*)mem_alloc(sizeof(struct S_particle),
-            maxlocalp, "Particles");
+                                      maxlocalp, "Particles");
 
     MPI_Type_contiguous(sizeof(struct S_particle), MPI_BYTE, &T_Particle);
     MPI_Type_commit(&T_Particle);
@@ -77,30 +71,30 @@ init2(int** sdid, int nspec, int maxfrac, int** nphgram,
     secondaryBase = *pbase + 1;  totalLocalParticles = *pbase + 2;
 
 #ifndef OH_POS_AWARE
-    SendBuf = (struct S_particle*)mem_alloc(sizeof(struct S_particle), maxlocalp,
-        "SendBuf");
+    SendBuf = (struct S_particle*)mem_alloc(sizeof(struct S_particle), maxlocalp, "SendBuf");
 #endif
+
     RecvBufBases = (struct S_particle**)mem_alloc(sizeof(struct S_particle*),
-        2 * ns + 1, "RecvBufBases");
+                                                  2 * ns + 1, "RecvBufBases");
     SendBufDisps = (int*)mem_alloc(sizeof(int), nnns, "SendBufDisps");
     RecvBufDisps = (int*)mem_alloc(sizeof(int), nn, "RecvBufDisps");
     nOfInjections = 0;
 
     Requests = (MPI_Request*)mem_alloc(sizeof(MPI_Request),
-        nnns * 4 + OH_NEIGHBORS * 2, "Requests");
+                                       nnns * 4 + OH_NEIGHBORS * 2, "Requests");
     Statuses = (MPI_Status*)mem_alloc(sizeof(MPI_Status),
-        nnns * 4 + OH_NEIGHBORS * 2, "Statuses");
+                                      nnns * 4 + OH_NEIGHBORS * 2, "Statuses");
 }
-int
-oh2_transbound_(int* currmode, int* stats) {
+
+int oh2_transbound_(int* currmode, int* stats) {
     return(transbound2(*currmode, *stats, 2));
 }
-int
-oh2_transbound(int currmode, int stats) {
+
+int oh2_transbound(int currmode, int stats) {
     return(transbound2(currmode, stats, 2));
 }
-int
-transbound2(int currmode, int stats, int level) {
+
+int transbound2(int currmode, int stats, int level) {
     int ret = MODE_NORM_SEC, nn = nOfNodes, ns = nOfSpecies, nnns2 = 2 * nn * ns;
     int i, s, tp;
 
@@ -119,8 +113,8 @@ transbound2(int currmode, int stats, int level) {
     totalParts = *totalLocalParticles = tp;  nOfInjections = 0;
     return((currMode = ret));
 }
-static int
-try_primary2(int currmode, int level, int stats) {
+
+static int try_primary2(int currmode, int level, int stats) {
 
     if (!try_primary1(currmode, level, stats))  return(FALSE);
     move_to_sendbuf_primary(Mode_PS(currmode), stats);
@@ -128,8 +122,8 @@ try_primary2(int currmode, int level, int stats) {
     primaryParts = *secondaryBase = TotalPGlobal[myRank];
     return(TRUE);
 }
-void
-exchange_primary_particles(int currmode, int stats) {
+
+void exchange_primary_particles(int currmode, int stats) {
     int i, s, nn = nOfNodes, ns = nOfSpecies, nnns = nn * ns, me = myRank;
     int* np, * rnp, * sbd;
 
@@ -154,17 +148,15 @@ exchange_primary_particles(int currmode, int stats) {
                     rc = rnp[src];                /* NOfPrimaries[0][s][src] */
                     if (dst >= 0)
                         MPI_Sendrecv(SendBuf + sbd[dst], np[dst], T_Particle, dst, 0,
-                            rb, rc, T_Particle, src, 0, MCW, &st);
+                                     rb, rc, T_Particle, src, 0, MCW, &st);
                     else
                         MPI_Recv(rb, rc, T_Particle, src, 0, MCW, &st);
                     rb += rc;
-                }
-                else if (dst >= 0)
+                } else if (dst >= 0)
                     MPI_Send(SendBuf + sbd[dst], np[dst], T_Particle, dst, 0, MCW);
             }
         }
-    }
-    else {
+    } else {
         for (s = 0; s < ns; s++, np += nn, rnp += nn, sbd += nn) {
             /* np=&NOfPLocal[0][s][0] */
             /* sbd=&SendBufDisps[s][0] */
@@ -180,21 +172,20 @@ exchange_primary_particles(int currmode, int stats) {
                 np[i] += np[i + nnns];            /* += NOfPLocal[1][s][i] */
             }
             MPI_Alltoallv(SendBuf, np, sbd, T_Particle,
-                RecvBufBases[s], TempArray, RecvBufDisps, T_Particle, MCW);
+                          RecvBufBases[s], TempArray, RecvBufDisps, T_Particle, MCW);
         }
     }
 }
-static int
-try_stable2(int currmode, int level, int stats) {
 
+static int try_stable2(int currmode, int level, int stats) {
     if (!try_stable1(currmode, level, stats)) return(FALSE);
     exchange_particles(CommList + SLHeadTail[1], SecSLHeadTail[0],
-        Nodes[myRank].parentid, currmode == MODE_NORM_SEC,
-        currmode, stats);
+                       Nodes[myRank].parentid, currmode == MODE_NORM_SEC,
+                       currmode, stats);
     return(TRUE);
 }
-static void
-rebalance2(int currmode, int level, int stats) {
+
+static void rebalance2(int currmode, int level, int stats) {
     int me = myRank, ns = nOfSpecies, s, oldp, newp;
 
     rebalance1(currmode, level, stats);
@@ -203,13 +194,13 @@ rebalance2(int currmode, int level, int stats) {
         for (s = 0; s < ns; s++)  InjectedParticles[ns + s] = 0;
     if (Mode_Is_Norm(currmode))
         exchange_particles(SecRList, SecRLSize,
-            Mode_PS(currmode) ? oldp : -1,
-            1, currmode, stats);
+                           Mode_PS(currmode) ? oldp : -1,
+                           1, currmode, stats);
     else
         exchange_particles(SecRList, SecRLSize, -1, 0, currmode, stats);
 }
-void
-move_to_sendbuf_primary(int secondary, int stats) {
+
+void move_to_sendbuf_primary(int secondary, int stats) {
     int me = myRank, ns = nOfSpecies, nn = nOfNodes, nnns = nn * ns;
     int s, i, j, * pp;
 
@@ -226,20 +217,20 @@ move_to_sendbuf_primary(int secondary, int stats) {
     if (nOfInjections)  move_injected_to_sendbuf();
 
     move_to_sendbuf_uw(0, me, NOfPLocal + me, 0, TotalP, 0, TotalPNext,
-        RecvBufBases);
+                       RecvBufBases);
 
     if (secondary) move_to_sendbuf_uw(1, -1, NULL, primaryParts, TotalP + ns,
-        0, TotalPNext + ns, RecvBufBases + ns);
+                                      0, TotalPNext + ns, RecvBufBases + ns);
 
     move_to_sendbuf_dw(0, me, NOfPLocal + me, primaryParts, TotalP,
-        TotalPGlobal[me], TotalPNext);
+                       TotalPGlobal[me], TotalPNext);
 
     set_sendbuf_disps(secondary, -1);
     if (nOfInjections)
         move_injected_from_sendbuf(InjectedParticles, me, RecvBufBases);
 }
-static void
-move_to_sendbuf_secondary(int secondary, int stats) {
+
+static void move_to_sendbuf_secondary(int secondary, int stats) {
     int me = myRank, ns = nOfSpecies, ns2 = ns << 1, nn = nOfNodes;
     struct S_node* node = Nodes + me;
     int put[2] = { -node->get.prime, -node->get.sec }, pnext[2];
@@ -267,13 +258,11 @@ move_to_sendbuf_secondary(int secondary, int stats) {
                 TotalPNext[i] = tpni = tpni + stay - putme;
                 stay = putme;
                 putme = 0;
-            }
-            else
+            } else
                 putme -= stay;
             if (stay > inj) {
                 InjectedParticles[ns2 + i] = 0;  *mynps = stay - inj;
-            }
-            else {
+            } else {
                 InjectedParticles[ns2 + i] = inj - stay;  *mynps = 0;
             }
             npnext += tpni;
@@ -284,16 +273,15 @@ move_to_sendbuf_secondary(int secondary, int stats) {
     if (nOfInjections)  move_injected_to_sendbuf();
 
     move_to_sendbuf_uw(0, me, mynp[0],            /* &NOfPLocal[0][0][me] */
-        0, TotalP, 0, TotalPNext, RecvBufBases);
+                       0, TotalP, 0, TotalPNext, RecvBufBases);
 
     if (secondary) {
         move_to_sendbuf_uw(1, sec, mynp[1],         /* &NOfPLocal[1][0][sec] */
-            primaryParts, TotalP + ns, pnext[0], TotalPNext + ns,
-            RecvBufBases + ns);
+                           primaryParts, TotalP + ns, pnext[0], TotalPNext + ns,
+                           RecvBufBases + ns);
         move_to_sendbuf_dw(1, sec, mynp[1], totalParts, TotalP + ns,
-            pnext[0] + pnext[1], TotalPNext + ns);
-    }
-    else {
+                           pnext[0] + pnext[1], TotalPNext + ns);
+    } else {
         struct S_particle* rbb = Particles + pnext[0];
         for (s = 0; s < ns; s++) {
             RecvBufBases[ns + s] = rbb;                 /* RecvBufBases[1][s] */
@@ -301,19 +289,19 @@ move_to_sendbuf_secondary(int secondary, int stats) {
         }
     }
     move_to_sendbuf_dw(0, me, mynp[0], primaryParts, TotalP, pnext[0],
-        TotalPNext);
+                       TotalPNext);
 
     set_sendbuf_disps(secondary, sec);
     if (nOfInjections) {
         move_injected_from_sendbuf(InjectedParticles + ns2, me, RecvBufBases);
         if (sec >= 0)
             move_injected_from_sendbuf(InjectedParticles + ns2 + ns, sec,
-                RecvBufBases + ns);
+                                       RecvBufBases + ns);
     }
     primaryParts = *secondaryBase = pnext[0];
 }
-void
-set_sendbuf_disps(int secondary, int parent) {
+
+void set_sendbuf_disps(int secondary, int parent) {
     int nn = nOfNodes, ns = nOfSpecies, me = myRank;
     int i, j, k, s, disp;
 
@@ -334,9 +322,9 @@ set_sendbuf_disps(int secondary, int parent) {
         }
     }
 }
-void
-exchange_particles(struct S_commlist* secrlist, int secrlsize, int oldparent,
-    int neighboring, int currmode, int stats) {
+
+void exchange_particles(struct S_commlist* secrlist, int secrlsize, int oldparent,
+                        int neighboring, int currmode, int stats) {
     int me = myRank, nn = nOfNodes, ns = nOfSpecies, nnns = nn * ns;
     int newparent = Nodes[me].parentid;
     int s, i, req;
@@ -351,13 +339,12 @@ exchange_particles(struct S_commlist* secrlist, int secrlsize, int oldparent,
         if (oldparent != newparent && oldparent >= 0)
             receive_particles(CommList + SLHeadTail[1], SecSLHeadTail[0], &req);
         send_particles(CommList + SLHeadTail[0], SLHeadTail[1] - SLHeadTail[0],
-            newparent, oldparent, &req);
+                       newparent, oldparent, &req);
         if (oldparent >= 0)
             send_particles(CommList + SLHeadTail[1] + SecSLHeadTail[0],
-                SecSLHeadTail[1] - SecSLHeadTail[0], me, newparent, &req);
+                           SecSLHeadTail[1] - SecSLHeadTail[0], me, newparent, &req);
         MPI_Waitall(req, Requests, Statuses);
-    }
-    else {
+    } else {
         int ps;
         int* rcount = NOfRecv;
         int* scount = NOfSend;
@@ -379,22 +366,21 @@ exchange_particles(struct S_commlist* secrlist, int secrlsize, int oldparent,
                         if (r >= 0) {
                             sbd[i] = sbd0[r];
                             sbd0[r] += scount[i];
-                        }
-                        else sbd[i] = 0;            /* not necessary becasuse scount[i]=0
+                        } else sbd[i] = 0;            /* not necessary becasuse scount[i]=0
                                                        but ... */
                     }
                 }
                 MPI_Alltoallv(SendBuf, scount, sbd, T_Particle,
-                    rbb[s], rcount, RecvBufDisps, T_Particle, MCW);
+                              rbb[s], rcount, RecvBufDisps, T_Particle, MCW);
                 if (ps == 0)
                     for (i = 0; i < nn; i++) sbd0[i] += scount[i];
             }
         }
     }
 }
-static void
-move_to_sendbuf_uw(int ps, int me, int* putmes, int cbase, int* ctp,
-    int nbase, int* ntp, struct S_particle** rbb) {
+
+static void move_to_sendbuf_uw(int ps, int me, int* putmes, int cbase, int* ctp,
+                               int nbase, int* ntp, struct S_particle** rbb) {
     int i, in, j, jn, k, s;
     int ns = nOfSpecies, nn = nOfNodes, * sbd = SendBufDisps;
     Decl_Grid_Info();
@@ -416,11 +402,9 @@ move_to_sendbuf_uw(int ps, int me, int* putmes, int cbase, int* ctp,
                 else         SendBuf[sbd[dst]++] = Particles[i];
             }
             rbb[s] = Particles + j;           /* receive to bottom */
-        }
-        else if (jn > in) {                 /* downward only and thus skip */
+        } else if (jn > in) {                 /* downward only and thus skip */
             rbb[s] = Particles + j;           /* receive to top */
-        }
-        else {                            /* downward and upward */
+        } else {                            /* downward and upward */
             int ib, im, jm;
             for (; putme > 0; i++) {            /* throw my particles to send buf */
                 int dst = Subdomain_Id(Particles[i].nid, ps);
@@ -450,9 +434,9 @@ move_to_sendbuf_uw(int ps, int me, int* putmes, int cbase, int* ctp,
         }
     }
 }
-static void
-move_to_sendbuf_dw(int ps, int me, int* putmes, int ctail, int* ctp, int ntail,
-    int* ntp) {
+
+static void move_to_sendbuf_dw(int ps, int me, int* putmes, int ctail, int* ctp, int ntail,
+                               int* ntp) {
     int i, in, j, jn, k, s, ns = nOfSpecies, nn = nOfNodes, nnnsm1 = nn * (ns - 1);
     int* sbd = SendBufDisps + nnnsm1;
     Decl_Grid_Info();
@@ -476,8 +460,8 @@ move_to_sendbuf_dw(int ps, int me, int* putmes, int ctail, int* ctp, int ntail,
         }
     }
 }
-static void
-move_injected_to_sendbuf() {
+
+static void move_injected_to_sendbuf() {
     struct S_particle* pbuf = Particles + totalParts;
     int ninj = nOfInjections, nn = nOfNodes, sb = specBase;
     int i;
@@ -493,8 +477,8 @@ move_injected_to_sendbuf() {
         SendBuf[SendBufDisps[dst + s * nn]++] = pbuf[i];
     }
 }
-static void
-move_injected_from_sendbuf(int* injected, int mysd, struct S_particle** rbb) {
+
+static void move_injected_from_sendbuf(int* injected, int mysd, struct S_particle** rbb) {
     int nn = nOfNodes, ns = nOfSpecies;
     int* sdisp = SendBufDisps + mysd;
     int s, i;
@@ -507,8 +491,8 @@ move_injected_from_sendbuf(int* injected, int mysd, struct S_particle** rbb) {
         rbb[s] += inj;  *sdisp += inj;
     }
 }
-static void
-receive_particles(struct S_commlist* rlist, int rlsize, int* req) {
+
+static void receive_particles(struct S_commlist* rlist, int rlsize, int* req) {
     int me = myRank, i, r = *req, nn = nOfNodes, ns = nOfSpecies, sdisp;
     struct S_particle* rbuf;
 
@@ -517,7 +501,7 @@ receive_particles(struct S_commlist* rlist, int rlsize, int* req) {
             int count = rlist[i].count, tag = rlist[i].tag;
             rbuf = RecvBufBases[tag];  RecvBufBases[tag] = rbuf + count;
             MPI_Irecv(rbuf, count, T_Particle, rlist[i].sid, tag, MCW,
-                Requests + (r++));
+                      Requests + (r++));
         }
         if (rlist[i].sid == me) {
             int count = rlist[i].count, tag = rlist[i].tag, region = rlist[i].region;
@@ -525,14 +509,14 @@ receive_particles(struct S_commlist* rlist, int rlsize, int* req) {
             sdisp = SendBufDisps[region];  SendBufDisps[region] = sdisp + count;
             /* SendBufDisps[s][region] */
             MPI_Isend(SendBuf + sdisp, count, T_Particle, rlist[i].rid, tag, MCW,
-                Requests + (r++));
+                      Requests + (r++));
         }
     }
     *req = r;
 }
-static void
-send_particles(struct S_commlist* slist, int slsize, int myregion,
-    int parentregion, int* req) {
+
+static void send_particles(struct S_commlist* slist, int slsize, int myregion,
+                           int parentregion, int* req) {
     int me = myRank, i, r = *req, nn = nOfNodes, ns = nOfSpecies, sdisp, region;
 
     for (i = 0; i < slsize; i++) {
@@ -543,17 +527,17 @@ send_particles(struct S_commlist* slist, int slsize, int myregion,
             sdisp = SendBufDisps[region];  SendBufDisps[region] = sdisp + count;
             /* SendBufDisps[s][region] */
             MPI_Isend(SendBuf + sdisp, count, T_Particle, slist[i].rid, tag, MCW,
-                Requests + (r++));
+                      Requests + (r++));
         }
     }
     *req = r;
 }
-void
-oh2_inject_particle_(struct S_particle* part) {
+
+void oh2_inject_particle_(struct S_particle* part) {
     oh2_inject_particle(part);
 }
-void
-oh2_inject_particle(struct S_particle* part) {
+
+void oh2_inject_particle(struct S_particle* part) {
     const int ns = nOfSpecies, nn = nOfNodes;
     int inj = totalParts + nOfInjections++;
     int s = Particle_Spec(part->spec - specBase);
@@ -562,8 +546,9 @@ oh2_inject_particle(struct S_particle* part) {
 #ifndef OH_HAS_SPEC
     if (ns != 1)
         local_errstop("particles cannot be injected when S_particle does not "
-            "have 'spec' element and you have two or more species");
+                      "have 'spec' element and you have two or more species");
 #endif
+
     if (inj >= nOfLocalPLimit)
         local_errstop("injection causes local particle buffer overflow");
     Particles[inj] = *part;
@@ -571,29 +556,28 @@ oh2_inject_particle(struct S_particle* part) {
     if (n == RegionId[1]) {
         NOfPLocal[(ns + s) * nn + n]++;
         InjectedParticles[ns + s]++;
-    }
-    else {
+    } else {
         NOfPLocal[nn * s + n]++;
         if (n == myRank)  InjectedParticles[s]++;
     }
 }
-void
-oh2_remap_injected_particle_(struct S_particle* part) {
+
+void oh2_remap_injected_particle_(struct S_particle* part) {
     oh2_remap_injected_particle(part);
 }
-void
-oh2_remap_injected_particle(struct S_particle* part) {
+
+void oh2_remap_injected_particle(struct S_particle* part) {
     const int pidx = part - Particles, ns = nOfSpecies, nn = nOfNodes;
     int s, n;
 
     if (pidx < totalParts || pidx >= totalParts + nOfInjections)
         local_errstop("'part' argument pointing %c%d%c of the particle buffer is "\
-            "not for injected particles",
-            specBase ? '(' : '[', pidx + specBase, specBase ? ')' : ']');
+                      "not for injected particles",
+                      specBase ? '(' : '[', pidx + specBase, specBase ? ')' : ']');
 #ifndef OH_HAS_SPEC
     if (ns != 1)
         local_errstop("particles cannot be injected when S_particle does not "
-            "have 'spec' element and you have two or more species");
+                      "have 'spec' element and you have two or more species");
 #endif
     s = Particle_Spec(part->spec - specBase);
     n = part->nid;
@@ -601,69 +585,79 @@ oh2_remap_injected_particle(struct S_particle* part) {
     if (n == RegionId[1]) {
         NOfPLocal[(ns + s) * nn + n]++;
         InjectedParticles[ns + s]++;
-    }
-    else {
+    } else {
         NOfPLocal[nn * s + n]++;
         if (n == myRank)  InjectedParticles[s]++;
     }
 }
-void
-oh2_remove_injected_particle_(struct S_particle* part) {
+
+void oh2_remove_injected_particle_(struct S_particle* part) {
     oh2_remove_injected_particle(part);
 }
-void
-oh2_remove_injected_particle(struct S_particle* part) {
-    const int pidx = part - Particles, ns = nOfSpecies, nn = nOfNodes;
-    int s, n;
 
-    if (pidx < totalParts || pidx >= totalParts + nOfInjections)
+void oh2_remove_injected_particle(struct S_particle* part) {
+    const int pidx = part - Particles;
+    const int ns = nOfSpecies;
+    const int nn = nOfNodes;
+
+    if (pidx < totalParts || pidx >= totalParts + nOfInjections) {
         local_errstop("'part' argument pointing %c%d%c of the particle buffer is "\
-            "not for injected particles",
-            specBase ? '(' : '[', pidx + specBase, specBase ? ')' : ']');
+                      "not for injected particles",
+                      specBase ? '(' : '[', pidx + specBase, specBase ? ')' : ']');
+    }
+
 #ifndef OH_HAS_SPEC
-    if (ns != 1)
+    if (ns != 1) {
         local_errstop("particles cannot be injected when S_particle does not "
-            "have 'spec' element and you have two or more species");
+                      "have 'spec' element and you have two or more species");
+    }
 #endif
+
+    int s, n;
     s = Particle_Spec(part->spec - specBase);
     n = part->nid;
     if (n < 0)  return;
     if (n == RegionId[1]) {
         NOfPLocal[(ns + s) * nn + n]--;
         InjectedParticles[ns + s]--;
-    }
-    else {
+    } else {
         NOfPLocal[nn * s + n]--;
         if (n == myRank)  InjectedParticles[s]--;
     }
     part->nid = -1;
 }
-void
-oh2_set_total_particles_() {
+
+void oh2_set_total_particles_() {
     set_total_particles();
 }
-void
-oh2_set_total_particles() {
+
+void oh2_set_total_particles() {
     set_total_particles();
 }
-int
-oh2_max_local_particles_(dint* npmax, int* maxfrac, int* minmargin) {
+
+int oh2_max_local_particles_(dint* npmax, int* maxfrac, int* minmargin) {
     return(oh2_max_local_particles(*npmax, *maxfrac, *minmargin));
 }
-int
-oh2_max_local_particles(dint npmax, int maxfrac, int minmargin) {
-    int nn, nplint;
-    dint npl, npmargin;
 
+int oh2_max_local_particles(dint npmax, int maxfrac, int minmargin) {
+    if (npmax <= 0) {
+        errstop("max # of particles should be greater than 0");
+    }
+    if (maxfrac <= 0 || maxfrac > 100) {
+        errstop("load imbalance factor (%d) should be in the range [1..100]", maxfrac);
+    }
+
+    int nn;
     MPI_Comm_size(MCW, &nn);
-    if (npmax <= 0) errstop("max # of particles should be greater than 0");
-    if (maxfrac <= 0 || maxfrac > 100)
-        errstop("load imbalance factor (%d) should be in the range [1..100]",
-            maxfrac);
+
+    dint npl, npmargin;
     npl = (npmax - 1) / nn + 1; /* ceil(npmax/nn) */
     npmargin = (npl * maxfrac - 1) / 100 + 1;
     npl += (npmargin < minmargin) ? minmargin : npmargin;
+
     if (npl > INT_MAX) mem_alloc_error("Particles", 0);
-    nplint = npl;
+
+    int nplint = npl;
+
     return(nplint);
 }
