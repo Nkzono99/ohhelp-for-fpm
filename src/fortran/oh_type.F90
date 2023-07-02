@@ -7,24 +7,33 @@
 !  unchanged.
 #include "oh_config.h"
 module oh_type
-    type oh_mycomm
-        sequence
-        integer :: prime, sec, rank, root, black
-    end type oh_mycomm
+    use, intrinsic :: iso_c_binding
+    implicit none
 
-    type oh_particle
-        sequence
-        real*8 :: x, y, z, vx, vy, vz
-        integer   :: pid
-        integer :: preside
+    private
+    public oh_mycomm
+    public oh_particle
+    public OH_PCL_ALIVE
+    public OH_PCL_INJECTED
+    public OH_PCL_TO_BE_ACCUMULATED
+    public OH_PCL_TO_BE_ACCUMULATED_AS_ANTIPCL
+
+    type, bind(c) :: oh_mycomm
+        integer(c_int) :: prime, sec, rank, root, black
+    end type
+
+    type, bind(c) :: oh_particle
+        real(c_double) :: x, y, z, vx, vy, vz
+        integer(c_int)   :: pid
 
 #ifdef OH_BIG_SPACE
-        integer*8 :: nid
+        integer(c_long) :: nid
 #else
-        integer :: nid
+        integer(c_int) :: nid
 #endif
 
-        integer :: spec
+        integer(c_int) :: spec
+        integer(c_int) :: preside
     end type
 
     !> preside
@@ -32,4 +41,5 @@ module oh_type
     integer, parameter :: OH_PCL_INJECTED = 1
     integer, parameter :: OH_PCL_TO_BE_ACCUMULATED = -1
     integer, parameter :: OH_PCL_TO_BE_ACCUMULATED_AS_ANTIPCL = -2
+
 end module
