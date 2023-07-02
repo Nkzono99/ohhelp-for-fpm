@@ -190,6 +190,7 @@ contains
         integer, intent(out)   :: pbase(3)
         integer, intent(in)    :: maxlocalp
         type(oh_mycomm), intent(out) :: mycomm
+
 #if OH_DIMENSION==1
         integer, intent(inout) :: nbor(3)
 #else
@@ -199,6 +200,7 @@ contains
         integer, intent(inout) :: nbor(3, 3, 3)
 #endif
 #endif
+
         integer, intent(in)    :: pcoord(OH_DIMENSION)
         integer, intent(inout) :: sdoms(:, :, :)
         integer, intent(in)    :: scoord(2, OH_DIMENSION)
@@ -215,9 +217,9 @@ contains
 
         call oh3_init_(sdid(1), nspec, maxfrac, nphgram(1, 1, 1), totalp(1, 1), &
                        pbuf(1), pbase(1), maxlocalp, mycomm, nbor(1, 1, 1), &
-                       pcoord(1), sdoms(1, 1, 1), scoord(1, 1), 1, bcond(1, 1), &
+                       pcoord(1), sdoms(1, 1, 1), scoord(1, 1), nbound, bcond(1, 1), &
                        bounds(1, 1, 1), ftypes(1, 1), cfields(1), ctypes(1, 1, 1, 1), &
-                       fsizes(1, 1, 1), 0, 0, 0)
+                       fsizes(1, 1, 1), stats, repiter, verbose)
     end subroutine
 
 end module
