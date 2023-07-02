@@ -1,0 +1,21 @@
+{
+    "C_Cpp.vcFormat.indent.accessSpecifiers": true,
+    "C_Cpp.vcFormat.indent.braces": false,
+    "fortran.linter.includePaths": [
+        "${workspaceFolder}/include"
+    ],
+    "C_Cpp.vcFormat.indent.withinParentheses": "alignToParenthesis",
+    "C_Cpp.vcFormat.space.beforeInheritanceColon": true,
+    "C_Cpp.vcFormat.space.beforeInitializerListOpenBrace": false,
+    "C_Cpp.vcFormat.space.groupSquareBrackets": true,
+    "C_Cpp.vcFormat.wrap.preserveBlocks": "oneLiners",
+    "C_Cpp.vcFormat.indent.preserveWithinParentheses": false,
+    "C_Cpp.vcFormat.newLine.beforeOpenBrace.function": "sameLine",
+    "C_Cpp.vcFormat.newLine.beforeOpenBrace.type": "sameLine",
+    "C_Cpp.vcFormat.newLine.beforeElse": false,
+    "C_Cpp.vcFormat.newLine.closeBraceSameLine.emptyFunction": false,
+    "C_Cpp.vcFormat.newLine.scopeBracesOnSeparateLines": true,
+    "C_Cpp.vcFormat.newLine.beforeCatch": false,
+    "C_Cpp.vcFormat.space.withinSquareBrackets": false,
+    "C_Cpp.vcFormat.newLine.beforeOpenBrace.block": "sameLine"
+}
