@@ -1,9 +1,12 @@
+# NOTICE.md
+
 ## OhHelp Library Package: Version 1.1.1 (2015/10/23)
+
 Copyright (C) 2009-2015  Hiroshi Nakashima <h.nakashima@media.kyoto-u.ac.jp> (ACCMS, Kyoto University)
                         
-### LICENSE (Look at the top of each program file.)
+### LICENSE (See the top of each program file for original text.)
 
-```
+``` Fortran
 !  File: *****.***
 !  Version 1.1.1 (2015/10/23)
 !  Copyright (C) 2009-2015  Hiroshi Nakashima <h.nakashima@media.kyoto-u.ac.jp>
