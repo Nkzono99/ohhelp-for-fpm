@@ -1,17 +1,19 @@
-name = "ohhelp-for-fpm"
+name = "ohhelpf"
 version = "0.1.0"
 license = "MIT"
 author = "Nkzono99"
 maintainer = "j-nakazono@stu.kobe-u.ac.jp"
 copyright = "Copyright 2023, Nkzono99"
+
 [build]
 auto-tests = true
 auto-examples = true
 module-naming = false
+
 [install]
 library = true
+
 [fortran]
 implicit-typing = false
 implicit-external = false
 source-form = "free"
-
