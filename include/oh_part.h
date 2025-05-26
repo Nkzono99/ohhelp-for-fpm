@@ -7,7 +7,6 @@
    unchanged.
 */
 #include "oh_config.h"
-
 #ifdef  OH_BIG_SPACE
 typedef long long int OH_nid_t;
 #else
@@ -22,11 +21,9 @@ typedef int OH_nid_t;
 // };
 
 struct S_particle {
-    double x, y, z, vx, vy, vz;
-    int pid;
-    OH_nid_t nid;
-    int spec;
-    int preside;
+  double x, y, z, vx, vy, vz;
+  int pid, preside;
+  OH_nid_t nid;
+  int spec;
 };
-
 #define OH_HAS_SPEC

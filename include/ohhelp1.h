@@ -40,7 +40,9 @@
 #define OH_NEIGHBORS    (3*3*3)
 #endif
 
-#define MCW MPI_COMM_WORLD      /* shorthand of MPI_COMM_WORLD */
+MPI_Comm fam_comm;
+
+#define MCW fam_comm      /* shorthand of communicator, MPI_COMM_WORLD or CTCA_subcomm */
 
 typedef long long int dint;     /* shorthand of 64-bit integer */
 
@@ -51,7 +53,7 @@ typedef long long int dint;     /* shorthand of 64-bit integer */
 /* Basic process configuration variables */
 EXTERN int nOfNodes;
 EXTERN int myRank;
-EXTERN int RegionId[2], * SubdomainId;
+EXTERN int RegionId[2], *SubdomainId;
 #define MODE_NORM_PRI (0)
 #define MODE_NORM_SEC (1)
 #define MODE_REB_SEC  (-1)
@@ -70,71 +72,71 @@ EXTERN int currMode, accMode;
 /* Number of particles and related variables */
 EXTERN int  nOfSpecies;
 EXTERN int  maxFraction;
-EXTERN int* NOfPLocal;                 /* [2][nOfSpecies][nOfNodes] */
-EXTERN int* NOfPrimaries;              /* [2][nOfSpecies][nOfNodes] */
-EXTERN dint* TotalPGlobal;              /* [nOfNodes+1] */
+EXTERN int  *NOfPLocal;                 /* [2][nOfSpecies][nOfNodes] */
+EXTERN int  *NOfPrimaries;              /* [2][nOfSpecies][nOfNodes] */
+EXTERN dint *TotalPGlobal;              /* [nOfNodes+1] */
 EXTERN dint nOfParticles;
 EXTERN int  nOfLocalPMax;
-EXTERN dint* NOfPToStay;                /* [nOfNodes] */
-EXTERN int* TotalP;                    /* [2][nOfSpecies] */
-EXTERN int* TotalPNext;                /* [2][nOfSpecies] */
+EXTERN dint *NOfPToStay;                /* [nOfNodes] */
+EXTERN int  *TotalP;                    /* [2][nOfSpecies] */
+EXTERN int  *TotalPNext;                /* [2][nOfSpecies] */
 EXTERN int  primaryParts, totalParts;
-EXTERN int* NOfRecv, * RecvCounts;      /* [2][nOfSpecies][nOfNodes] */
-EXTERN int* NOfSend, * SendCounts;      /* [2][nOfSpecies][nOfNodes] */
-EXTERN int* InjectedParticles;         /* [2][2][nOfSpecies] */
-EXTERN int* TempArray;                 /* [nOfNodes] */
+EXTERN int  *NOfRecv, *RecvCounts;      /* [2][nOfSpecies][nOfNodes] */
+EXTERN int  *NOfSend, *SendCounts;      /* [2][nOfSpecies][nOfNodes] */
+EXTERN int  *InjectedParticles;         /* [2][2][nOfSpecies] */
+EXTERN int  *TempArray;                 /* [nOfNodes] */
 EXTERN MPI_Datatype T_Histogram;
 
 /* Computation node descriptors */
 struct S_node {
-    struct { int prime, sec; } stay;
-    struct { dint prime, sec; } get;
-    struct { int prime, sec, black, rank; } comm;
-    struct S_node* parent, * sibling, * child;
-    int id, parentid;
+  struct {int prime, sec;} stay;
+  struct {dint prime, sec;} get;
+  struct {int prime, sec, black, rank;} comm;
+  struct S_node *parent, *sibling, *child;
+  int id, parentid;
 };
-EXTERN struct S_node* Nodes, * NodesNext, ** NodeQueue;
+EXTERN struct S_node *Nodes, *NodesNext, **NodeQueue;
 
 /* Heap structure for load rebalancing */
 struct S_heap {
-    int n, * node, * index;
+  int n, *node, *index;
 };
 EXTERN struct S_heap LessHeap, GreaterHeap;
 
 /* Structured variables for particle transfer */
 struct S_commlist {
-    int sid, rid, region, count, tag;     /* tag = spec + nOfSpecies*sec */
+  int sid, rid, region, count, tag;     /* tag = spec + nOfSpecies*sec */
 };
-EXTERN struct S_commlist* CommList, * SecRList;
-EXTERN int RLIndex[OH_NEIGHBORS + 1];
+EXTERN struct S_commlist *CommList, *SecRList;
+EXTERN int RLIndex[OH_NEIGHBORS+1];
 EXTERN int SLHeadTail[2], SecSLHeadTail[2], SecRLSize;
 EXTERN MPI_Datatype T_Commlist;
 struct S_commsched_context {
-    int neighbor, sender, spec, comidx, dones, donen;
+  int neighbor, sender, spec, comidx, dones, donen;
 };
 
 /* Structured variables for MPI communicator */
 EXTERN MPI_Group GroupWorld;
 EXTERN struct {
-    int n;
-    MPI_Comm* body;       /* [nOfNodes] */
+  int n;
+  MPI_Comm *body;       /* [nOfNodes] */
 } Comms;
 struct S_mycommc {
-    MPI_Comm prime, sec;
-    int rank, root, black;
+  MPI_Comm prime, sec;
+  int rank, root, black;
 };
-EXTERN struct S_mycommc* MyComm, * MyCommC;
+EXTERN struct S_mycommc *MyComm, *MyCommC;
 EXTERN struct S_mycommf {
-    int prime, sec;
-    int rank, root, black;
+  int prime, sec;
+  int rank, root, black;
 } *MyCommF;
 
 /* Neighboring information */
 EXTERN int Neighbors[3][OH_NEIGHBORS], SrcNeighbors[OH_NEIGHBORS];
-/* <BSW,BS,BSE,BW,B,BE,BNW,BN,BNE,    : 00..04..08
-     SW, S, SE, W,O  E, NW, N, NE,    : 09..13..17
-    TSW,TS,TSE,TW,T,TE,TNW,TN,TNE>    : 18..22..26 */
-EXTERN int* DstNeighbors;
+  /* <BSW,BS,BSE,BW,B,BE,BNW,BN,BNE,    : 00..04..08
+       SW, S, SE, W,O  E, NW, N, NE,    : 09..13..17
+      TSW,TS,TSE,TW,T,TE,TNW,TN,TNE>    : 18..22..26 */
+EXTERN int *DstNeighbors;
 
 /* Structures and variables for statistics and verbose messaging */
 #define STATS_PART_MOVE_PRI_MIN 0
@@ -158,7 +160,7 @@ EXTERN int* DstNeighbors;
 #define STATS_PARTS             (STATS_PART_SECONDARY+1)
 
 #ifdef OH_DEFINE_STATS
-static char* StatsPartStrings[STATS_PARTS] = {
+static char *StatsPartStrings[STATS_PARTS] = {
   "p2p transfer[pri,min]",
   "p2p transfer[pri,max]",
   "p2p transfer[pri,ave]",
@@ -181,26 +183,26 @@ static char* StatsPartStrings[STATS_PARTS] = {
 #endif
 
 struct S_statscurr {
-    struct {
-        double value, val[2 * STATS_TIMINGS + 2];
-        int key, ev[2 * STATS_TIMINGS + 2];
-    } time;
-    dint part[STATS_PARTS];
+  struct {
+    double value, val[2*STATS_TIMINGS+2];
+    int key, ev[2*STATS_TIMINGS+2];
+  } time;
+  dint part[STATS_PARTS];
 };
 struct S_statstime {
-    double min, max, total;
-    int ev;
+  double min, max, total;
+  int ev;
 };
 struct S_statspart {
-    dint min, max, total;
+  dint min, max, total;
 };
 struct S_statstotal {
-    struct S_statstime time[2 * STATS_TIMINGS];
-    struct S_statspart part[STATS_PARTS];
+  struct S_statstime time[2*STATS_TIMINGS];
+  struct S_statspart part[STATS_PARTS];
 };
 EXTERN struct S_stats {
-    struct S_statscurr curr;
-    struct S_statstotal subtotal, total;
+  struct S_statscurr curr;
+  struct S_statstotal subtotal, total;
 } Stats;
 
 EXTERN MPI_Datatype T_StatsTime;
@@ -208,53 +210,55 @@ EXTERN MPI_Op Op_StatsTime, Op_StatsPart;
 EXTERN int statsMode, reportIteration, verboseMode;
 
 /* Prototypes for the functions called from simulator code */
-void oh1_neighbors(int** nbor);
-void oh1_families(int** famindex, int** members);
+void oh1_neighbors(int **nbor);
+void oh1_families(int **famindex, int **members);
 int  oh1_accom_mode();
-void oh1_broadcast(void* pbuf, void* sbuf, int pcount, int scount,
+void oh1_broadcast(void *pbuf, void *sbuf, int pcount, int scount,
                    MPI_Datatype ptype, MPI_Datatype stype);
-void oh1_all_reduce(void* pbuf, void* sbuf, int pcount, int scount,
+void oh1_all_reduce(void *pbuf, void *sbuf, int pcount, int scount,
                     MPI_Datatype ptype, MPI_Datatype stype,
                     MPI_Op pop, MPI_Op sop);
-void oh1_reduce(void* pbuf, void* sbuf, int pcount, int scount,
+void oh1_reduce(void *pbuf, void *sbuf, int pcount, int scount,
                 MPI_Datatype ptype, MPI_Datatype stype,
                 MPI_Op pop, MPI_Op sop);
 void oh1_init_stats(int key, int ps);
 void oh1_stats_time(int key, int ps);
 void oh1_show_stats(int step, int currmode);
 void oh1_print_stats(int nstep);
-void oh1_verbose(char* message);
+void oh1_verbose(char *message);
 
-void oh1_init(int** sdid, int nspec, int maxfrac, int** nphgram,
-              int** totalp, int** rcounts, int** scounts, void* mycomm,
-              int** nbor, int* pcoord, int stats, int repiter, int verbose);
+void oh1_fam_comm(MPI_Comm *fortran_comm);
+
+void oh1_init(int **sdid, int nspec, int maxfrac, int **nphgram,
+              int **totalp, int **rcounts, int **scounts, void *mycomm,
+              int **nbor, int *pcoord, int stats, int repiter, int verbose);
 int  oh1_transbound(int currmode, int stats);
 
-void oh1_neighbors_(int* nbor);
-void oh1_families_(int* famindex, int* members);
+void oh1_neighbors_(int *nbor);
+void oh1_families_(int *famindex, int *members);
 int  oh1_accom_mode_();
-void oh1_broadcast_(void* pbuf, void* sbuf, int* pcount, int* scount,
-                    int* ptype, int* stype);
-void oh1_all_reduce_(void* pbuf, void* sbuf, int* pcount, int* scount,
-                     int* ptype, int* stype, int* pop, int* sop);
-void oh1_reduce_(void* pbuf, void* sbuf, int* pcount, int* scount,
-                 int* ptype, int* stype, int* pop, int* sop);
-void oh1_init_stats_(int* key, int* ps);
-void oh1_stats_time_(int* key, int* ps);
-void oh1_show_stats_(int* step, int* currmode);
-void oh1_print_stats_(int* nstep);
-void oh1_verbose_(char* message);
-void oh1_init_(int* sdid, int* nspec, int* maxfrac, int* nphgram,
-               int* totalp, int* rcounts, int* scounts,
-               struct S_mycommf* mycomm, int* nbor, int* pcoord, int* stats,
-               int* repiter, int* verbose);
-int  oh1_transbound_(int* currmode, int* stats);
+void oh1_broadcast_(void *pbuf, void *sbuf, int *pcount, int *scount,
+                    int *ptype, int *stype);
+void oh1_all_reduce_(void *pbuf, void *sbuf, int *pcount, int *scount,
+                     int *ptype, int *stype, int *pop, int *sop);
+void oh1_reduce_(void *pbuf, void *sbuf, int *pcount, int *scount,
+                 int *ptype, int *stype, int *pop, int *sop);
+void oh1_init_stats_(int *key, int *ps);
+void oh1_stats_time_(int *key, int *ps);
+void oh1_show_stats_(int *step, int *currmode);
+void oh1_print_stats_(int *nstep);
+void oh1_verbose_(char *message);
+void oh1_init_(int *sdid, int *nspec, int *maxfrac, int *nphgram,
+               int *totalp, int *rcounts, int *scounts,
+               struct S_mycommf *mycomm, int *nbor, int *pcoord, int *stats,
+               int *repiter, int *verbose);
+int  oh1_transbound_(int *currmode, int *stats);
 
 /* Prototypes for the functions called from higher-level library code */
-void  init1(int** sdid, int nspec, int maxfrac, int** nphgram,
-            int** totalp, int** rcounts, int** scounts,
-            struct S_mycommc* mycommc, struct S_mycommf* mycommf, int** nbor,
-            int* pcoord, int stats, int repiter, int verbose);
+void  init1(int **sdid, int nspec, int maxfrac, int **nphgram,
+            int **totalp, int **rcounts, int **scounts,
+            struct S_mycommc *mycommc, struct S_mycommf *mycommf, int **nbor,
+            int *pcoord, int stats, int repiter, int verbose);
 void* mem_alloc(int esize, int count, char* varname);
 void  mem_alloc_error(char* varname, size_t size);
 void  errstop(char* format, ...);
